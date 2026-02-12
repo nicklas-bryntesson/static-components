@@ -1,0 +1,62 @@
+---
+description: Project entry point - always loaded for context
+globs:
+alwaysApply: true
+---
+
+# Project Architecture & Mental Model
+
+This project intentionally deviates from common frontend conventions.
+Do not assume mobile-first, utility-first, or breakpoint-driven design.
+
+## Core Philosophy
+
+We build **stateful UI systems**, not responsive pages.
+
+- Components exist in **explicit states**
+- States are **closed and exhaustive**
+- Fallbacks are **boring and safe**
+- Enhancements apply **only when correctness is guaranteed**
+
+We optimize for:
+
+- Inspectability (DevTools should clearly show active state)
+- Deletability (fallbacks removable in one go)
+- Predictable failure modes
+- Long-term maintainability over short-term convenience
+
+## Progressive Enhancement (Strict Interpretation)
+
+- If the browser **cannot measure a component**, it uses the **base layout**
+- Enhancement only happens when the platform guarantees correctness
+- We do **not** guess based on viewport size
+- We do **not** simulate features in fallback modes
+
+Fallback is **not a third state** — it is a forced base state.
+
+## Component Ownership
+
+- Components own **internal layout logic**
+- Parents own **coordination** (grids, alignment, composition)
+- Parents never rewrite component internals
+
+This is Dependency Injection:
+
+- Components expose capabilities
+- Parents decide when to use them
+
+## Tooling Assumptions
+
+- CSS describes **state**, not mutations
+- Tokens describe **values**, never behavior
+- JavaScript may resolve **multi-axis configuration**
+- CSS applies already-resolved state
+
+## Non-goals
+
+- Maximal DRY
+- Clever one-liners
+- Utility-first layout logic
+- Mobile-first as a universal rule
+
+If code feels explicit or verbose, that is intentional.

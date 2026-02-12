@@ -1,0 +1,222 @@
+.Accordion {
+  --opening-container-animation: grid-template-rows 0.25s ease-in-out;
+  --opening-slot-animation: opacity 0.15s ease-in-out 0.25s;
+  --closing-container-animation: grid-template-rows 0.25s ease-out 0.15s;
+  --_closing-slot-animation: opacity 0.15s ease-out;
+
+/* SVL vars */
+--_opening-container-animation: grid-template-rows .25s ease-in-out; 
+--_opening-slot-animation: opacity .15s ease-in-out .25s;
+--_closing-container-animation: grid-template-rows .25s ease-out .15s;
+--_closing-slot-animation: opacity .15s ease-out;
+--_iconRotateTiming: .15s;
+--_iconStrokeLeftTiming: .25s;
+--_iconStrokeRightTiming: .25s;
+
+/* Accessbillity */
+--_focusColor: red;
+
+--_maxWidth: var(--breakpoint-md-rem);
+
+  display: flex;
+  flex-direction: column;
+  inline-size: 100%;
+  max-width: var(--_maxWidth);
+  margin-inline: auto;
+  background-color: var(--brand-platinum);
+  /* This is to prevent flicker when javascript enhances the component */
+  opacity: 0;
+
+  & .accordion-title {
+    background-color: var(--brand-seasalt);
+
+    &:first-of-type {
+      margin-block-start: 0;
+    }
+
+    & .toggle {
+      display: grid;
+      grid-template-areas: "text icon";
+      inline-size: 100%;
+      background-color: var(--brand-ebony-clay);
+      color: var(--full-white);
+      border: none;
+      cursor: pointer;
+      transition: background-color 0.15s ease-in-out;
+      opacity: 1;
+
+      & .title {
+        margin-inline-end: auto;
+        text-align: start;
+      }
+
+      & .icon {
+        grid-area: icon;
+        display: grid;
+        place-items: center;
+        pointer-events: none;
+      }
+    }
+
+    & .toggle.fade-in {
+      animation: fadeIn 0.6s ease-in-out forwards;
+    }
+
+    /* Focus styles */
+    & .toggle:focus:not(:focus-visible) {
+      outline: 0;
+      border: 0;
+    }
+
+    & .toggle:focus-visible {
+      outline: 0.125em solid var(--full-white);
+      outline-offset: -0.35em;
+    }
+
+    & .toggle[aria-expanded="true"] {
+      background-color: hsl(0, 0%, 0%);
+      border-end-end-radius: 0;
+      border-end-start-radius: 0;
+
+      & .icon {
+        transform: rotate(180deg);
+      }
+    }
+  }
+
+  /* Default state is that all panels is open just in case we dont have access to javascript for some reason */
+  & .accordion-panel {
+    display: grid;
+    opacity: 0;
+    background-color: var(--full-white);
+    overflow: hidden;
+
+    & .cartridge {
+      /* Needed for the grid aimation to work */
+      min-height: 0;
+    }
+  }
+
+  /* Ok so we have javascript and can toggle between Expanded/Collapsed */
+  & .accordion-panel.expanded {
+    grid-template-rows: 1fr;
+    transition: var(--opening-container-animation);
+
+    & .cartridge {
+      opacity: 1;
+      visibility: visible;
+      transition: var(--opening-slot-animation);
+    }
+  }
+
+  & .accordion-panel.collapsed {
+    grid-template-rows: 0fr;
+
+    & .cartridge {
+      opacity: 0;
+      visibility: hidden;
+    }
+  }
+
+  & .accordion-panel.animating {
+    grid-template-rows: 0fr;
+    transition: var(--closing-container-animation);
+
+    & .cartridge {
+      opacity: 0;
+      transition: var(--_closing-slot-animation);
+    }
+  }
+}
+
+/* Of any of the triggers have focus, trigger outline on the whole accordion via :has */
+.accordion:has(.toggle:focus-visible) {
+  outline: 4px solid var(--brand-sapphire);
+  outline-offset: 0.35em;
+}
+
+/*
+*
+* Mobile view
+*
+*/
+
+@media (min-width: 0) and (max-width: 29.98rem) {
+  .accordion {
+    padding: 0.5rem;
+    border-radius: 0.4em;
+
+    & .accordion-title {
+      margin-block-start: 0.5rem;
+
+      & .toggle {
+        grid-template-columns: 1fr 2rem;
+        padding-inline-start: 1em;
+        padding-block: 0.5em;
+        border-radius: 0.2em;
+
+        & .icon {
+          inline-size: 1.5em;
+          block-size: 1.5em;
+        }
+      }
+    }
+  }
+}
+
+/*
+*
+* Desktop view
+*
+*/
+
+@media (min-width: 30rem) {
+  .accordion {
+    padding: 0.5rem;
+    border-radius: 0.4em;
+
+    & .accordion-title {
+      margin-block-start: 0.5rem;
+
+      &:first-of-type {
+        margin-block-start: 0;
+      }
+
+      & .toggle {
+        grid-template-columns: 1fr 2rem;
+        padding-inline-start: 1em;
+        padding-block: 0.5em;
+        border-radius: 0.3em;
+
+        & .icon {
+          width: 1.5em;
+          height: 1.5em;
+        }
+      }
+    }
+
+    & .accordion-panel {
+      border-end-end-radius: 0.2em;
+      border-end-start-radius: 0.2em;
+    }
+  }
+}
+
+/* Content */
+.slot {
+  padding-block: 1em;
+  padding-inline: 1.125em;
+}
+
+.accordion.fade-in {
+  animation: fadeIn 0.6s ease-in-out forwards;
+}
+
+@keyframes fadeIn {
+  0% {
+    opacity: 0;
+  }
+  100% {
+    opacity: 1;
+  }
+}

@@ -1,0 +1,6 @@
+@theme {
+    /* Below xs should be the defensive baseline */
+    --breakpoint-xs: 21.25rem;
+    --site-padding: var(--SITE--PADDING);
+    --site-max-width: var(--SITE--MAX--WIDTH);
+}

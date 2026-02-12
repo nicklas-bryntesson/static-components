@@ -1,0 +1,7 @@
+{
+  "editor.formatOnSave": true, // Enable formatting for all files globally
+
+  "[html]": {
+    "editor.formatOnSave": false // Disable formatting specifically for HTML files
+  }
+}

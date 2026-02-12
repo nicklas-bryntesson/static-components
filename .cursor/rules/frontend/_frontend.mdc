@@ -1,0 +1,74 @@
+---
+description: CSS and styling conventions, data attributes, component CSS. NO BEM syntax.
+globs:
+alwaysApply: false
+---
+
+# Frontend Architecture Rules
+
+This file documents **rules and constraints**, not patterns.
+Patterns live next to concrete examples.
+
+## Layout Decisions
+
+- Layout switches are driven by **container queries**
+- Viewport breakpoints must not infer component layout
+- If a feature requires guessing, it is not implemented
+
+## Fallback Behavior
+
+- Fallback always uses the **base layout**
+- Fallback never attempts partial enhancement
+- Fallback never switches image crops
+
+Fallback correctness > fallback polish.
+
+## Images
+
+- Images must not guess layout state
+- `<picture>` cannot see container queries
+- If image selection must sync with layout:
+  - duplicate assets per state
+  - toggle visibility via CSS
+- Hidden assets must remain `display: none`
+
+## Subgrid Constraints
+
+Subgrid has a hard requirement:
+
+- **Child components must share a single, invariant grid structure**
+
+Therefore:
+
+- Components that change internal grid topology **cannot** participate
+- Alignment is a **property of the list**, not the card
+- Subgrid applies only in contexts with uniform child structure
+
+Do not attempt:
+
+- conditional subgrid per item
+- subgrid based on child state
+- grid-area tricks to bypass invariance
+
+## Tokens
+
+Token layering is strict:
+
+1. Constants — raw values (never referenced directly)
+2. Semantic tokens — design language
+3. Theme tokens — environment context
+4. Component-private tokens — implementation detail
+
+Tokens must never encode behavior or state.
+
+## CSS Conventions
+
+- Edit `.src.css` files only [4]
+- Templates are pass-throughs; components own logic [1][3]
+- Always use `only` in Twig includes [1][3]
+- No BEM syntax; use data attributes for variants [1]
+
+## Deletion Rule
+
+Any fallback or enhancement must be removable as a single block.
+If it cannot be deleted safely, it is not acceptable.

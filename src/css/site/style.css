@@ -1,0 +1,85 @@
+@import "tailwindcss";
+@plugin "@tailwindcss/typography";
+
+@import "./tailwind/theme.css";
+
+@import "./01-Setup/tokens.css";
+@import "./01-Setup/site.css";
+@import "./01-Setup/grid-stack.css";
+@import "./01-Setup/grid-layout.css";
+@import "./01-Setup/grid-container.css";
+@import "./01-Setup/grid-breakout.css";
+
+@import "./03_Ui/Button.css";
+
+/* @import "./prose.css"; */
+
+@import "./../../partials/components/HeroMedia/HeroMedia.css";
+@import "./../../partials/components/Teaser/Teaser.css";
+
+.ExampleTeaserList {
+  --_TeaserMaxWidth: 20rem;
+  --_GridColumns: repeat(
+    auto-fill,
+    minmax(min(var(--_TeaserMaxWidth), 100%), 1fr)
+  );
+
+  margin-block: 10rem;
+  display: grid;
+  grid-template-columns: var(--_GridColumns);
+  gap: var(--grid-layout-gap);
+
+  > li {
+    display: flex;
+    flex-direction: column;
+
+    > * {
+      flex-grow: 1;
+    }
+  }
+}
+
+/* @supports (container-type: inline-size) {
+  .ExampleTeaserList {
+    > li:first-child {
+      grid-column: span 2;
+
+      .Teaser {
+        --_maxInlineSize: unset;
+      }
+    }
+  }
+} */
+
+/* @supports (grid-template-columns: subgrid) {
+  .ExampleTeaserList {
+    > li {
+      grid-row: span 4;
+      display: grid;
+      grid-template-rows: subgrid;
+
+      > .Teaser {
+        grid-row: span 4;
+        grid-template-rows: subgrid;
+
+        > .LayoutContainer {
+          grid-row: span 4;
+          grid-template-rows: subgrid;
+        }
+      }
+    }
+  }
+} */
+
+.Heading {
+  overflow-wrap: anywhere; /* break long words if needed */
+  hyphens: auto; /* add hyphens at break points */
+  text-wrap: balance; /* distribute text evenly across lines */
+  min-width: 0;
+
+  > a {
+    overflow-wrap: anywhere; /* break long words if needed */
+    hyphens: auto; /* add hyphens at break points */
+    text-wrap: balance; /* distribute text evenly across lines */
+  }
+}

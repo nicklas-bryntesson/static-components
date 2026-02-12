@@ -1,0 +1,35 @@
+:root {
+  --SITE--PADDING--MOBILE: 16px;
+  --SITE--PADDING--MOBILE--NEGATIVE: calc(--SITE--PADDING--MOBILE * -1);
+
+  /* fluid 400 - 1440px 16 - 80px */
+  --SITE--PADDING--TABLET: clamp(1rem, -0.538rem + 6.15vw, 5rem);
+  --SITE--PADDING--TABLET--NEGATIVE: calc(--SITE--PADDING--TABLET * -1);
+
+  --SITE--PADDING--DESKTOP: 5rem;
+  --SITE--PADDING--DESKTOP--NEGATIVE: var(--SITE--PADDING--DESKTOP * -1);
+
+  --MOBILE--BREAKPOINT: 48.74rem;
+  --DESKTOP--BREAKPOINT: 75rem;
+
+  --MAX--WIDTH--SITE: 90rem;
+  --MAX--WIDTH--CONTENT: 64rem;
+
+  --GRID--GAP--MOBILE: 0; /* Needed to prevent 12 gap's beeing wider that the mobile screen */
+  --GRID--GAP--DESKTOP: 2rem;
+
+  /* Mobile 0 - 399px */
+  @media (max-width: 24.99rem) {
+    --SITE--PADDING: var(--SITE--PADDING--MOBILE);
+  }
+
+  /* Tablet: 400px – 1439px */
+  @media (min-width: 25rem) and (max-width: 89.98rem) {
+    --SITE--PADDING: var(--SITE--PADDING--TABLET);
+  }
+
+  /* Desktop: 1440px and above */
+  @media (min-width: 90rem) {
+    --SITE--PADDING: var(--SITE--PADDING--DESKTOP);
+  }
+}

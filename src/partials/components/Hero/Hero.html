@@ -1,0 +1,109 @@
+<div class="HeroDemo grid-container-full my-16 !hidden">
+    
+    {{> components/Hero/Controls }}
+
+    <div class="Hero grid-container">
+        
+        <!-- Video: Content mode -->
+        <figure id="mediaVideo-Content" class="relative border border-black/10 rounded overflow-hidden">
+            <video
+                class="aspect-video w-full h-auto"
+                src="https://www.pricer.com/hubfs/pricer-avenue-elevate-shopper-experience.mp4#t=0.1" 
+                width="1920" 
+                height="1080" 
+                muted="" 
+                playsinline="" 
+                loop="" 
+                autoplay="" 
+                preload="none"
+            ></video>
+        </figure>
+
+        <!-- Video: Decorative/Backdrop mode -->
+        <figure id="mediaVideo-Decorative" class="relative">
+            <span class="media-overlay absolute inset-0 z-10 pointer-events-none"></span>
+            <video 
+                class="absolute inset-0 w-full h-full object-cover"
+                src="https://brand.assets.adidas.com/video/upload/f_auto:video,q_auto/if_w_gt_1920,w_1920/global_ss26_adizero_evo_sl_running_ss26_acquire_evo_sl_hk_hp_banner_hero_3_d_3425e67e89.mp4"
+                width="1920" 
+                height="1080" 
+                muted="" 
+                playsinline="" 
+                loop="" 
+                autoplay="" 
+                preload="none"
+            ></video>
+        </figure>
+
+        <!-- Picture: Content mode -->
+        <figure id="mediaPicture-Content" class=" relative">
+            <picture>
+                <source type="image/webp" srcset="https://www.trapets.com/assets/images/background/Trapets-hero/_1920xAUTO_fit_center-center_82_none/72557/woman-long-hair_2023-11-23-122747_zpww.webp">
+                <img 
+                    src="https://www.trapets.com/assets/images/background/Trapets-hero/_full/72557/woman-long-hair_2023-11-23-122747_zpww.webp" 
+                    alt="" 
+                    class="w-full h-auto"
+                    style="object-position: 50% 50%" 
+                    fetchpriority="high"
+                >
+            </picture>
+        </figure>
+
+        <!-- Picture: Decorative/Backdrop mode (art direction + focal point) -->
+        <figure id="mediaPicture-Decorative" class=" relative">
+            <span class="media-overlay absolute inset-0 z-10 pointer-events-none"></span>
+            <picture class="absolute inset-0 w-full h-full">
+                <source 
+                    srcset="/images/Cat/IMG_5742%20(3).webp"
+                    media="(min-width: 80rem)"
+                    type="image/webp"
+                >
+                <source 
+                    srcset="/images/Cat/IMG_5742%20(2).webp"
+                    media="(min-width: 48rem)"
+                    type="image/webp"
+                >
+                <source 
+                    srcset="/images/Cat/IMG_5742%20(1).webp"
+                    media="(min-width: 40rem)"
+                    type="image/webp"
+                >
+                <source 
+                    srcset="/images/Cat/IMG_5742.JPG.webp"
+                    media="(max-width: 39.9375rem)"
+                    type="image/webp"
+                >
+                <img 
+                    src="/images/Cat/IMG_5742.webp" 
+                    alt="Sleeping cat" 
+                    class="w-full h-full object-cover"
+                    style="object-position: 60% 70%"
+                    loading="lazy"
+                >
+            </picture>
+        </figure>
+
+        <div class="content grid-layout">
+            <div class="flex flex-col col-span-6 gap-4 py-8">
+                <h1 class="font-bold text-3xl xl:text-4xl 2xl:text-6xl text-pretty">
+                    <span id="contentLongTitle">A longer title that could breakdown to multiple lines</span>
+                    <span id="contentShortTitle">A short spicy title</span>
+                </h1>
+                <div id="contentShortPreamble" class="prose">
+                    <p>A short preamble with just a sentence or two.</p>
+                </div>
+                <div id="contentLongPreamble" class="prose">
+                    <p>A longer preamble that spans multiple sentences and provides more context. This could include additional details about the product, service, or message that the hero section is promoting. It gives users more information to engage with.</p>
+                </div>
+                <div id="contentButtons" class="flex flex-wrap items-center gap-4">
+                    <a id="buttonOne" href="" class="Button" data-size="md" data-type="primary" data-theme="default">
+                        <span class="buttonText">Link text</span>
+                    </a>
+                    <a id="buttonTwo" href="" class="Button" data-size="md" data-type="secondary" data-theme="default">
+                        <span class="buttonText">A longer link text</span>
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

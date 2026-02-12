@@ -1,0 +1,80 @@
+<article class="Teaser" data-media="{{default media true}}">
+  {{!-- Needed for containerQueries --}}
+  <div class="LayoutContainer">
+    {{#if (default media true)}}
+    <figure class="MediaContainer">
+      <!-- Stacked state image -->
+      <picture class="Media StackedSources">
+        <source
+          type="image/avif"
+          srcset="
+            {{poc 'teaser-src/stacked-400x225.avif'}} 400w,
+            {{poc 'teaser-src/stacked-800x450.avif'}} 800w
+          "
+          sizes="100%"
+        />
+        <source
+          type="image/webp"
+          srcset="
+            {{poc 'teaser-src/stacked-400x225.webp'}} 400w,
+            {{poc 'teaser-src/stacked-800x450.webp'}} 800w
+          "
+          sizes="100%"
+        />
+        <img
+          src="{{poc 'teaser-src/stacked-400x225.jpg'}}"
+          srcset="
+            {{poc 'teaser-src/stacked-400x225.jpg'}} 400w,
+            {{poc 'teaser-src/stacked-800x450.jpg'}} 800w
+          "
+          sizes="100%"
+          alt=""
+          loading="lazy"
+        />
+      </picture>
+
+      <!-- Horizontal state image -->
+      <picture class="Media HorizontalSources">
+        <source
+          type="image/avif"
+          srcset="
+            {{poc 'teaser-src/horizontal-320x320.avif'}} 320w,
+            {{poc 'teaser-src/horizontal-640x640.avif'}} 640w
+          "
+          sizes="12rem"
+        />
+        <source
+          type="image/webp"
+          srcset="
+            {{poc 'teaser-src/horizontal-320x320.webp'}} 320w,
+            {{poc 'teaser-src/horizontal-640x640.webp'}} 640w
+          "
+          sizes="12rem"
+        />
+        <img
+          src="{{poc 'teaser-src/horizontal-320x320.jpg'}}"
+          srcset="
+            {{poc 'teaser-src/horizontal-320x320.jpg'}} 320w,
+            {{poc 'teaser-src/horizontal-640x640.jpg'}} 640w
+          "
+          sizes="12rem"
+          alt=""
+          loading="lazy"
+        />
+      </picture>
+    </figure>
+    {{/if}}
+
+    <h3 class="Heading text-xl">{{default title "Post title"}}</h3>
+
+    <div class="Summary prose">
+      <p>{{default summary "Short summary text that may wrap."}}</p>
+    </div>
+
+    <a class="Button" data-size="sm" data-type="primary" data-theme="default">
+      <span class="buttonText" contenteditable="true"
+        >{{default buttonText "Read more"}}</span
+      >
+    </a>
+  </div>
+</article>

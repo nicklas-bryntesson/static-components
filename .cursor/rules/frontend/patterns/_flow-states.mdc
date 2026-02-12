@@ -1,0 +1,57 @@
+---
+alwaysApply: false
+---
+
+# Pattern: Flow-Based Layout States
+
+This document describes a **component-level layout pattern**.
+It is not a global rule.
+
+Use this pattern only when a component must adapt
+between stacked and side-by-side layouts safely.
+
+---
+
+## Concept
+
+The component has two **flow states** based on available inline size.
+
+### Flow States
+
+- **flow-vertical**
+  - Content flows top → bottom
+  - Media appears above content
+  - Default and fallback behavior
+  - May participate in cross-item alignment (e.g. subgrid)
+
+- **flow-horizontal**
+  - Content flows left → right
+  - Media appears beside content
+  - Only used when the component can be measured safely
+  - Component owns its internal layout
+  - Opts out of cross-item alignment
+
+These states are **mutually exclusive** and **closed**.
+
+Fallback always maps to **flow-vertical**.
+
+---
+
+## When to Use
+
+Use flow-based states when:
+
+- Component has media + content
+- Side-by-side layout is desirable but not always safe
+- Content length and font size are variable
+- Predictable degradation is required
+
+Do not use this pattern for:
+
+- Simple UI primitives
+- Purely decorative elements
+- Components with a single layout structure
+
+---
+
+## Implementation Example (Teaser)

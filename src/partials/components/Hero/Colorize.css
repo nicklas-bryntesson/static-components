@@ -1,0 +1,23 @@
+.Page.colorize .HeroDemo {
+    background-color: var(--color-red-300);
+
+    & .Hero {
+        background-color: var(--color-blue-400);
+
+        > figure {
+            background-color: var(--color-red-600);
+        }
+
+        > .content {
+            background-color: var(--color-red-200);
+
+            > div {
+                background-color: var(--color-red-900);
+
+                > h1 {
+                    background-color: var(--color-pink-500);
+                }
+            }
+        }
+    }
+}

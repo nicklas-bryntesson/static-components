@@ -1,0 +1,59 @@
+/* 
+Pixel Grid Component Styles
+Responsive pixel mask solution for creating animated pixel grid effects
+*/
+
+.pixel-grid-container {
+    position: relative;
+    width: 100%;
+    aspect-ratio: 846 / 629;
+    overflow: hidden;
+}
+
+.pixel-element {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    opacity: 0;
+}
+
+.pixel-media {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+}
+
+/* Pixel 1 - Top right */
+.pixel-1 {
+    mask-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 846 629' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M463 0H846V381H533C494.34 381 463 349.66 463 311V0Z' fill='white'/%3E%3C/svg%3E");
+    mask-size: 100% 100%;
+    mask-repeat: no-repeat;
+    mask-position: center;
+}
+
+/* Pixel 2 - Top left */
+.pixel-2 {
+    mask-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 846 629' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M0 0H450V311C450 349.66 418.66 381 380 381H70C31.3401 381 0 349.66 0 311V0Z' fill='white'/%3E%3C/svg%3E");
+    mask-size: 100% 100%;
+    mask-repeat: no-repeat;
+    mask-position: center;
+}
+
+/* Pixel 3 - Bottom right */
+.pixel-3 {
+    mask-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 846 629' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M643 464C643 425.34 674.34 394 713 394H846V629H643V464Z' fill='white'/%3E%3C/svg%3E");
+    mask-size: 100% 100%;
+    mask-repeat: no-repeat;
+    mask-position: center;
+}
+
+/* Pixel 4 - Bottom center */
+.pixel-4 {
+    mask-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 846 629' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M180 464C180 425.34 211.34 394 250 394H560C598.66 394 630 425.34 630 464V629H180V464Z' fill='white'/%3E%3C/svg%3E");
+    mask-size: 100% 100%;
+    mask-repeat: no-repeat;
+    mask-position: center;
+} 

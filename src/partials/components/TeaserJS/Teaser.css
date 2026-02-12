@@ -1,0 +1,156 @@
+/*
+Teaser layout states:
+
+- flow-vertical:
+  Content flows top to bottom. Media appears above content.
+  This is the default and fallback state.
+
+- flow-horizontal:
+  Content flows left to right. Media appears beside content.
+  This state is only used when the component can be measured safely.
+*/
+
+.Teaser {
+  --_maxInlineSize: 40rem;
+
+  /* Demo stuff */
+  border: 1px solid var(--color-stone-200);
+  padding: 1rem;
+  border-radius: 0.5rem;
+  /* Safe Fallback to prevent full screen teasers */
+  max-inline-size: var(--_maxInlineSize);
+
+  /* Invariants */
+  & .MediaContainer {
+    inline-size: 100%;
+    border: 1px solid var(--color-stone-200);
+    border-radius: 0.3rem;
+    overflow: hidden;
+    background-color: var(--color-stone-50);
+  }
+}
+
+/* Fallback for old browsers (3% ish) */
+@supports not (container-type: inline-size) {
+  .Teaser {
+    & .LayoutContainer {
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+
+      & .MediaContainer {
+        & .Media.StackedSources {
+          display: block;
+
+          img {
+            inline-size: 100%;
+            block-size: auto;
+          }
+        }
+
+        /* Test if browsers load hidden souces */
+        & .Media.HorizontalSources {
+          display: none;
+        }
+      }
+    }
+  }
+}
+
+@supports (container-type: inline-size) {
+  .Teaser {
+    container-type: inline-size;
+  }
+
+  /* STATE A — flow-vertical */
+  @container (max-width: 23.999rem) {
+    & .LayoutContainer {
+      display: grid;
+      grid-template-columns: 1fr;
+      grid-template-areas:
+        "media-flowVertical"
+        "heading-flowVertical"
+        "summary-flowVertical"
+        "link-flowVertical";
+      gap: 1rem;
+
+      & .MediaContainer {
+        grid-area: media-flowVertical;
+
+        & .Media.StackedSources {
+          display: block;
+        }
+
+        & .Media.HorizontalSources {
+          display: none;
+        }
+      }
+
+      & .Heading {
+        grid-area: heading-flowVertical;
+      }
+
+      & .Summary {
+        grid-area: summary-flowVertical;
+      }
+
+      & .Button {
+        grid-area: link-flowVertical;
+        margin-inline-end: auto;
+      }
+    }
+  }
+
+  /* STATE B — flow-horizontal */
+  @container (min-width: 24rem) {
+    & .LayoutContainer {
+      display: grid;
+      grid-template-columns: minmax(12rem, 1fr) 2fr;
+      grid-template-areas:
+        "media-flowHorizontal heading-flowHorizontal"
+        "media-flowHorizontal summary-flowHorizontal"
+        "media-flowHorizontal link-flowHorizontal";
+      gap: 1rem;
+      grid-template-rows: auto auto 1fr;
+      block-size: 100%;
+      align-items: stretch;
+
+      & .MediaContainer {
+        grid-area: media-flowHorizontal;
+        /* background-color: lightcoral; */
+        max-block-size: clamp(10rem, 30cqw, 14rem);
+
+        & .Media.StackedSources {
+          display: none;
+        }
+
+        & .Media.HorizontalSources {
+          display: block;
+          position: relative;
+
+          img {
+            inline-size: 100%;
+            block-size: auto;
+            aspect-ratio: 1 / 1;
+            object-fit: cover;
+          }
+        }
+      }
+
+      & .Heading {
+        grid-area: heading-flowHorizontal;
+        /*         background-color: darkorange; */
+      }
+
+      & .Summary {
+        grid-area: summary-flowHorizontal;
+      }
+
+      & .Button {
+        grid-area: link-flowHorizontal;
+        margin-inline-start: auto;
+        margin-block-start: auto;
+      }
+    }
+  }
+}

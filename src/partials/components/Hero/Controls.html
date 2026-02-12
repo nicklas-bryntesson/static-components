@@ -1,0 +1,201 @@
+<div class="Controls grid-container">
+    <fieldset class="flex flex-col rounded border border-black/10 bg-stone-50 p-4 mb-8" aria-describedby="controlLegend">
+        <h2 id="controlLegend" class="font-bold text-lg">Controls</h2>
+
+        <div class="flex flex-wrap gap-4 mt-2">
+            <div class="mediaControls grow">
+                <fieldset class="">
+                    <h3 class="font-bold">Media:</h3>
+                    <div class="flex flex-col gap-1">
+                        <label>
+                            <input id="mediaType-none" name="mediaType" type="radio" checked>
+                            none
+                        </label>
+                        <label>
+                            <input id="mediaType-image" name="mediaType" type="radio">
+                            image
+                        </label>
+                        <fieldset id="mediaType-imageControls" class="p-2 bg-stone-100 border border-black/10 rounded">
+                            <h4>Hero type</h4>
+                            <div class="flex flex-col gap-1">
+                                <label>
+                                    <input id="imageHeroType-backdrop" name="imageHeroType" type="radio" checked>
+                                    Media as backdrop
+                                </label>
+                                <label>
+                                    <input id="imageHeroType-content" name="imageHeroType" type="radio">
+                                    Media as content
+                                </label>
+                            </div>
+                        </fieldset>
+                        <label>
+                            <input id="mediaType-video" name="mediaType" type="radio">
+                            video
+                        </label>
+                        <fieldset id="mediaType-videoControls" class="p-2 bg-stone-100 border border-black/10 rounded">
+                            <h4>Hero type</h4>
+                            <div class="flex flex-col gap-1">
+                                <label>
+                                    <input id="videoHeroType-backdrop" name="videoHeroType" type="radio" checked>
+                                    Media as backdrop
+                                </label>
+                                <label>
+                                    <input id="videoHeroType-content" name="videoHeroType" type="radio">
+                                    Media as content
+                                </label>
+                            </div>
+                        </fieldset>
+                    </div>
+                </fieldset>
+            </div>
+
+            <div class="contentControls grow">
+                <fieldset class="">
+                    <h3 class="font-bold">Content:</h3>
+                    <div class="flex flex-col gap-1">
+                        <label>
+                            <input id="contentType-none" name="contentType" type="radio" checked>
+                            none
+                        </label>
+                        <label>
+                            <input id="contentType-title" name="contentType" type="radio">
+                            title
+                        </label>
+                        <fieldset id="contentType-titleControls" class="p-2 bg-stone-100 border border-black/10 rounded">
+                            <div class="flex flex-col gap-2">
+                                <div>
+                                    <h4 class="font-medium">Title Length</h4>
+                                    <div class="flex flex-col gap-1">
+                                        <label>
+                                            <input id="titleLength-short" name="titleLength" type="radio" checked>
+                                            Short
+                                        </label>
+                                        <label>
+                                            <input id="titleLength-long" name="titleLength" type="radio">
+                                            Long
+                                        </label>
+                                    </div>
+                                </div>
+                            </div>
+                        </fieldset>
+                        <label>
+                            <input id="contentType-titlePreamble" name="contentType" type="radio">
+                            title + preamble
+                        </label>
+                        <fieldset id="contentType-titlePreambleControls" class="p-2 bg-stone-100 border border-black/10 rounded">
+                            <div class="flex flex-col gap-2">
+                                <div>
+                                    <h4 class="font-medium">Title Length</h4>
+                                    <div class="flex flex-col gap-1">
+                                        <label>
+                                            <input id="titlePreambleTitle-short" name="titlePreambleTitle" type="radio" checked>
+                                            Short
+                                        </label>
+                                        <label>
+                                            <input id="titlePreambleTitle-long" name="titlePreambleTitle" type="radio">
+                                            Long
+                                        </label>
+                                    </div>
+                                </div>
+                                <div>
+                                    <h4 class="font-medium">Preamble Length</h4>
+                                    <div class="flex flex-col gap-1">
+                                        <label>
+                                            <input id="titlePreamblePreamble-short" name="titlePreamblePreamble" type="radio" checked>
+                                            Short
+                                        </label>
+                                        <label>
+                                            <input id="titlePreamblePreamble-long" name="titlePreamblePreamble" type="radio">
+                                            Long
+                                        </label>
+                                    </div>
+                                </div>
+                            </div>
+                        </fieldset>
+                        <label>
+                            <input id="contentType-titleLinks" name="contentType" type="radio">
+                            title + links
+                        </label>
+                        <fieldset id="contentType-titleLinksControls" class="p-2 bg-stone-100 border border-black/10 rounded">
+                            <div class="flex flex-col gap-2">
+                                <div>
+                                    <h4 class="font-medium">Title Length</h4>
+                                    <div class="flex flex-col gap-1">
+                                        <label>
+                                            <input id="titleLinksTitle-short" name="titleLinksTitle" type="radio" checked>
+                                            Short
+                                        </label>
+                                        <label>
+                                            <input id="titleLinksTitle-long" name="titleLinksTitle" type="radio">
+                                            Long
+                                        </label>
+                                    </div>
+                                </div>
+                                <div>
+                                    <h4 class="font-medium">Buttons</h4>
+                                    <div class="flex flex-col gap-1">
+                                        <label>
+                                            <input id="titleLinksButtons-one" name="titleLinksButtons" type="radio" checked>
+                                            1 button
+                                        </label>
+                                        <label>
+                                            <input id="titleLinksButtons-two" name="titleLinksButtons" type="radio">
+                                            2 buttons
+                                        </label>
+                                    </div>
+                                </div>
+                            </div>
+                        </fieldset>
+                        <label>
+                            <input id="contentType-full" name="contentType" type="radio" checked>
+                            title + links + preamble
+                        </label>
+                        <fieldset id="contentType-fullControls" class="p-2 bg-stone-100 border border-black/10 rounded">
+                            <div class="flex flex-col gap-2">
+                                <div>
+                                    <h4 class="font-medium">Title Length</h4>
+                                    <div class="flex flex-col gap-1">
+                                        <label>
+                                            <input id="fullTitle-short" name="fullTitle" type="radio" checked>
+                                            Short
+                                        </label>
+                                        <label>
+                                            <input id="fullTitle-long" name="fullTitle" type="radio">
+                                            Long
+                                        </label>
+                                    </div>
+                                </div>
+                                <div>
+                                    <h4 class="font-medium">Preamble Length</h4>
+                                    <div class="flex flex-col gap-1">
+                                        <label>
+                                            <input id="fullPreamble-short" name="fullPreamble" type="radio" checked>
+                                            Short
+                                        </label>
+                                        <label>
+                                            <input id="fullPreamble-long" name="fullPreamble" type="radio">
+                                            Long
+                                        </label>
+                                    </div>
+                                </div>
+                                <div>
+                                    <h4 class="font-medium">Buttons</h4>
+                                    <div class="flex flex-col gap-1">
+                                        <label>
+                                            <input id="fullButtons-one" name="fullButtons" type="radio" checked>
+                                            1 button
+                                        </label>
+                                        <label>
+                                            <input id="fullButtons-two" name="fullButtons" type="radio">
+                                            2 buttons
+                                        </label>
+                                    </div>
+                                </div>
+                            </div>
+                        </fieldset>
+                    </div>
+                </fieldset>
+            </div>
+        </div>
+    </fieldset>
+</div>

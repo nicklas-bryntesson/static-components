@@ -1,0 +1,40 @@
+/* 
+ * Complex 14 column grid with 12 centered columns in the middle and a fluid first and last column.
+ */
+
+/* prettier-ignore */
+:where(:root) {
+    --breakoutGrid--content--padding:       var(--sitePadding);
+    --breakoutGrid--content--maxWidth:      var(--MAXWIDTH--SITE);
+
+    --breakoutGrid--gap--mobile:            var(--GRID--GAP--MOBILE); /* 0 */
+    --breakoutGrid--gap--desktop:           var(--GRID--GAP--DESKTOP);
+
+
+    /* calculate grid */
+    --breakoutGrid--column--autoSize:       calc((var(--breakoutGrid--content--maxWidth) - (11 * var(--breakoutGrid--gap))) / 12);
+    --breakoutGrid--content--autoPadding:   calc(var(--breakoutGrid--content--padding, 0rem) - var(--breakoutGrid--gap, 0rem));
+
+    --breakoutGrid--mobile:                 [full-start] var(--breakoutGrid--content--padding) [main-start] repeat(1, [main] 1fr) [main-end] var(--breakoutGrid--content--padding) [full-end];
+    --breakoutGrid--desktop:                [full-start] minmax(var(--breakoutGrid--content--autoPadding), 1fr) [main-start] repeat(12, [main] minmax(0, var(--breakoutGrid--column--autoSize))) [main-end] minmax(var(--breakoutGrid--content--autoPadding), 1fr) [full-end];
+}
+
+@media (min-width: 0) and (max-width: 47.98rem) {
+  :where(:root) {
+    --breakoutGrid--gap: var(--breakoutGrid--gap--mobile);
+    --breakoutGrid--columns: var(--breakoutGrid--mobile);
+  }
+}
+
+@media (min-width: 48rem) {
+  :where(:root) {
+    --breakoutGrid--gap: var(--breakoutGrid--gap--desktop);
+    --breakoutGrid--columns: var(--breakoutGrid--desktop);
+  }
+}
+
+.breakoutGrid {
+  display: grid;
+  grid-template-columns: var(--breakoutGrid--columns);
+  gap: var(--breakoutGrid--gap);
+}

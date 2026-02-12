@@ -1,0 +1,157 @@
+/* 
+Hero layout states:
+- UNSAFE: stacked, no overlay
+- SAFE: overlay, media covers container
+
+State detection:
+- Viewport MQ (fallback)
+- Container query (canonical)
+*/
+
+.HeroMedia {
+  margin-block-end: 10rem;
+  /* display: none; */
+
+  /* ========== HERO INVARIANTS ========== */
+
+  /* Fallback no matter the browser capabilities */
+  @media (max-width: 21.24999rem) {
+    .Hero {
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+      margin-block-end: var(--block-vertical-distance);
+
+      & .mediaContainer img {
+        display: block;
+        inline-size: 100%;
+        block-size: auto;
+      }
+
+      .contentContainer {
+        /* offset from the viewport sides */
+        margin-inline: var(--content-offset);
+      }
+    }
+  }
+
+  /* ========== VIEWPORT-BASED OVERLAY (FALLBACK) ========== */
+
+  @supports not (container-type: inline-size) {
+    @media (min-width: 21.25rem) {
+      & .Hero {
+        position: relative;
+        display: grid;
+        grid-template-columns: var(--grid-container-columns);
+
+        & .mediaContainer {
+          position: relative;
+          grid-column: 1/-1;
+          grid-row: 1;
+          z-index: 1;
+
+          &::after {
+            position: absolute;
+            inset: 0;
+            block-size: 100%;
+            inline-size: 100%;
+            content: "";
+            background-color: transparent;
+          }
+
+          & img {
+            position: absolute;
+            inset: 0;
+            inline-size: 100%;
+            block-size: 100%;
+            object-fit: cover;
+          }
+        }
+
+        & .contentContainer {
+          position: relative;
+          grid-column: main;
+          grid-row: 1;
+          display: grid;
+          grid-template-columns: var(--grid-layout-columns);
+          column-gap: var(--grid-layout-gap);
+          z-index: 2;
+          padding-block: 30vh;
+
+          & .Button[data-theme="default"] {
+            &[data-type="primary"] {
+              @apply bg-white text-slate-800 border-white;
+
+              &:hover {
+                @apply bg-stone-100 border-stone-100;
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+
+  /* ========== CONTAINER-QUERY UPGRADE ========== */
+
+  @supports (container-type: inline-size) {
+    /* Cant measure a container inside the @container query if it is not announced before */
+    .Hero {
+      container-type: inline-size;
+    }
+
+    /* Overlay-safe range */
+    @container (min-width: 21.25rem) {
+      .Hero {
+        position: relative;
+        display: grid;
+        grid-template-columns: var(--grid-container-columns);
+
+        & .mediaContainer {
+          position: relative;
+          grid-column: 1/-1;
+          grid-row: 1;
+          z-index: 1;
+
+          &::after {
+            position: absolute;
+            inset: 0;
+            block-size: 100%;
+            inline-size: 100%;
+            content: "";
+            background-color: transparent;
+          }
+
+          & img {
+            position: absolute;
+            inset: 0;
+            inline-size: 100%;
+            block-size: 100%;
+            object-fit: cover;
+          }
+        }
+
+        & .contentContainer {
+          position: relative;
+          grid-column: main;
+          grid-row: 1;
+          display: grid;
+          grid-template-columns: var(--grid-layout-columns);
+          column-gap: var(--grid-layout-gap);
+          z-index: 2;
+          padding-block: 30dvh;
+
+          & .Button[data-theme="default"] {
+            &[data-type="primary"] {
+              @apply bg-white text-slate-800 border-white;
+
+              &:hover {
+                @apply bg-stone-100 border-stone-100;
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

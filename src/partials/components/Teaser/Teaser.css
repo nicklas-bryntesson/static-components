@@ -1,0 +1,151 @@
+/*
+Teaser layout states:
+
+- flow-vertical:
+  Content flows top to bottom. Media appears above content.
+  This is the default and fallback state.
+
+- flow-horizontal:
+  Content flows left to right. Media appears beside content.
+  This state is only used when the component can be measured safely.
+*/
+
+.Teaser {
+  --_maxInlineSize: 40rem;
+
+  /* Demo stuff */
+  border: 1px solid var(--color-stone-200);
+  padding: 1rem;
+  border-radius: 0.5rem;
+  /* Safe Fallback to prevent full screen teasers */
+  max-inline-size: var(--_maxInlineSize);
+
+  /* Invariants */
+  & .MediaContainer {
+    & .Media.StackedSources {
+      border: 1px solid var(--color-stone-200);
+      border-radius: 0.3rem;
+      overflow: hidden;
+      background-color: var(--color-stone-50);
+    }
+
+    & .Media.HorizontalSources {
+      border: 1px solid var(--color-stone-200);
+      border-radius: 0.3rem;
+      overflow: hidden;
+      background-color: var(--color-stone-50);
+    }
+  }
+}
+
+/* Fallback for old browsers (3% ish) */
+@supports not (container-type: inline-size) {
+  .Teaser {
+    & .LayoutContainer {
+      display: flex;
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 1rem;
+
+      & .MediaContainer {
+        & .Media.StackedSources {
+          display: block;
+
+          img {
+            inline-size: 100%;
+            block-size: auto;
+          }
+        }
+
+        /* Test if browsers load hidden souces */
+        & .Media.HorizontalSources {
+          display: none;
+        }
+      }
+    }
+  }
+}
+
+@supports (container-type: inline-size) {
+  .Teaser {
+    --_minMediaSize: 12rem;
+
+    container-type: inline-size;
+  }
+
+  /* STATE A — flow-vertical */
+  @container (max-width: 24.999rem) {
+    & .LayoutContainer {
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+
+      & .MediaContainer {
+        & .Media.StackedSources {
+          display: block;
+        }
+
+        & .Media.HorizontalSources {
+          display: none;
+        }
+      }
+
+      & .Button {
+        margin-inline-end: auto;
+      }
+    }
+  }
+
+  /* STATE B — flow-horizontal */
+  @container (min-width: 25rem) {
+    & .LayoutContainer {
+      display: grid;
+      grid-template-columns: minmax(var(--_minMediaSize), 1fr) 2fr;
+      grid-template-areas:
+        "media-flowHorizontal heading-flowHorizontal"
+        "media-flowHorizontal summary-flowHorizontal"
+        "media-flowHorizontal link-flowHorizontal";
+      gap: 1rem;
+      grid-template-rows: auto auto 1fr;
+      block-size: 100%;
+      align-items: stretch;
+
+      & .MediaContainer {
+        grid-area: media-flowHorizontal;
+        min-block-size: var(--_minMediaSize);
+
+        & .Media.StackedSources {
+          display: none;
+        }
+
+        & .Media.HorizontalSources {
+          display: block;
+          position: relative;
+          aspect-ratio: 1/1;
+
+          img {
+            block-size: 100%;
+            inline-size: 100%;
+            position: absolute;
+            inset: 0;
+          }
+        }
+      }
+
+      & .Heading {
+        grid-area: heading-flowHorizontal;
+        /*         background-color: darkorange; */
+      }
+
+      & .Summary {
+        grid-area: summary-flowHorizontal;
+      }
+
+      & .Button {
+        grid-area: link-flowHorizontal;
+        margin-inline-start: auto;
+        margin-block-start: auto;
+      }
+    }
+  }
+}

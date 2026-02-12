@@ -1,0 +1,19 @@
+{
+  "files.associations": {
+    "*.inc": "php",
+    "*.theme": "php",
+    "*.module": "php",
+    "*.install": "php",
+    "*.profile": "php",
+    "*.test": "php",
+    "*.html": "handlebars"
+  },
+  "intelephense.environment.includePaths": [
+    "web/themes/custom/vite_tailwind_storybook/includes"
+  ],
+  "css.validate": false,
+  "scss.validate": false,
+  "tailwindCSS.includeLanguages": {
+    "css": "css"
+  }
+}

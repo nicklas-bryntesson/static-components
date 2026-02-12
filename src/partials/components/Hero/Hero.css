@@ -1,0 +1,539 @@
+@import './Colorize.css'; /* Debug tools */
+
+/* Dark overlay gradient - hidden by default */
+.Hero .media-overlay {
+    background: linear-gradient(to top, rgba(0, 0, 0, 0.7) 0%, rgba(0, 0, 0, 0.3) 50%, transparent 100%);
+    opacity: 0;
+    transition: opacity 0.3s ease;
+}
+
+/* ===========================================
+   HERO LAYOUT - Backdrop vs Content mode
+   =========================================== */
+
+/* --- Image: backdrop mode --- */
+.HeroDemo:has(#mediaType-image:checked):has(#imageHeroType-backdrop:checked) {
+    & .Hero {
+        grid-template-rows: auto auto auto;
+        min-block-size: 50vh;
+    }
+
+    & #mediaPicture-Decorative {
+        grid-row: 1 / -1;
+        grid-column: 1 / -1;
+    }
+
+
+    & #mediaPicture-Decorative .media-overlay {
+        opacity: 1;
+    }
+
+    & .Hero .content {
+        grid-row: 2;
+        color: white;
+        z-index: 20;
+        margin-block: auto;
+    }
+
+    & .Hero .content .prose {
+        --tw-prose-body: white;
+        --tw-prose-headings: white;
+    }
+}
+
+/* --- Image: content mode --- */
+.HeroDemo:has(#mediaType-image:checked):has(#imageHeroType-content:checked) {
+    & #mediaPicture-Content {
+        grid-row: 1;
+        grid-column: main-start / main-end;
+    }
+
+    & .Hero .content {
+        grid-row: 2;
+        color: black;
+    }
+
+    & .Hero .content .prose {
+        --tw-prose-body: black;
+        --tw-prose-headings: black;
+    }
+}
+
+/* --- Video: backdrop mode --- */
+.HeroDemo:has(#mediaType-video:checked):has(#videoHeroType-backdrop:checked) {
+    & .Hero {
+        grid-template-rows: auto auto auto;
+        min-block-size: 50vh;
+        margin-block: auto;
+    }
+
+    & #mediaVideo-Decorative {
+        grid-row: 1 / -1;
+        grid-column: 1 / -1;
+    }
+
+    & #mediaVideo-Decorative .media-overlay {
+        opacity: 1;
+    }
+
+    & .Hero .content {
+        grid-row: 2;
+        color: white;
+        z-index: 20;
+    }
+
+    & .Hero .content .prose {
+        --tw-prose-body: white;
+        --tw-prose-headings: white;
+    }
+}
+
+/* --- Video: content mode --- */
+.HeroDemo:has(#mediaType-video:checked):has(#videoHeroType-content:checked) {
+    & #mediaVideo-Content {
+        grid-row: 1;
+        grid-column: main-start / main-end;
+    }
+
+    & .Hero .content {
+        grid-row: 2;
+        color: black;
+    }
+
+    & .Hero .content .prose {
+        --tw-prose-body: black;
+        --tw-prose-headings: black;
+    }
+}
+
+/* ===========================================
+   MEDIA CONTROLS - Display/Hide Logic
+   =========================================== */
+
+/* --- mediaType: none --- */
+.HeroDemo:has(#mediaType-none:checked) {
+    & #mediaType-imageControls {
+        display: none;
+    }
+
+    & #mediaType-videoControls {
+        display: none;
+    }
+
+    & #mediaPicture-Content {
+        display: none;
+    }
+
+    & #mediaPicture-Decorative {
+        display: none;
+    }
+
+    & #mediaVideo-Content {
+        display: none;
+    }
+
+    & #mediaVideo-Decorative {
+        display: none;
+    }
+}
+
+/* --- mediaType: image --- */
+.HeroDemo:has(#mediaType-image:checked) {
+    & #mediaType-imageControls {
+        display: block;
+    }
+
+    & #mediaType-videoControls {
+        display: none;
+    }
+
+    & #mediaVideo-Content {
+        display: none;
+    }
+
+    & #mediaVideo-Decorative {
+        display: none;
+    }
+
+    /* Nested: imageHeroType-backdrop */
+    &:has(#imageHeroType-backdrop:checked) {
+        & #mediaPicture-Content {
+            display: none;
+        }
+
+        & #mediaPicture-Decorative {
+            display: block;
+        }
+    }
+
+    /* Nested: imageHeroType-content */
+    &:has(#imageHeroType-content:checked) {
+        & #mediaPicture-Content {
+            display: block;
+        }
+
+        & #mediaPicture-Decorative {
+            display: none;
+        }
+    }
+}
+
+/* --- mediaType: video --- */
+.HeroDemo:has(#mediaType-video:checked) {
+    & #mediaType-imageControls {
+        display: none;
+    }
+
+    & #mediaType-videoControls {
+        display: block;
+    }
+
+    & #mediaPicture-Content {
+        display: none;
+    }
+
+    & #mediaPicture-Decorative {
+        display: none;
+    }
+
+    /* Nested: videoHeroType-backdrop */
+    &:has(#videoHeroType-backdrop:checked) {
+        & #mediaVideo-Content {
+            display: none;
+        }
+
+        & #mediaVideo-Decorative {
+            display: block;
+        }
+    }
+
+    /* Nested: videoHeroType-content */
+    &:has(#videoHeroType-content:checked) {
+        & #mediaVideo-Content {
+            display: block;
+        }
+
+        & #mediaVideo-Decorative {
+            display: none;
+        }
+    }
+}
+
+/* ===========================================
+   CONTENT CONTROLS - Display/Hide Logic
+   =========================================== */
+
+/* --- contentType: none --- */
+.HeroDemo:has(#contentType-none:checked) {
+    & #contentType-titleControls {
+        display: none;
+    }
+
+    & #contentType-titlePreambleControls {
+        display: none;
+    }
+
+    & #contentType-titleLinksControls {
+        display: none;
+    }
+
+    & #contentType-fullControls {
+        display: none;
+    }
+
+    & #contentShortTitle {
+        display: none;
+    }
+
+    & #contentLongTitle {
+        display: none;
+    }
+
+    & #contentShortPreamble {
+        display: none;
+    }
+
+    & #contentLongPreamble {
+        display: none;
+    }
+
+    & #contentButtons {
+        display: none;
+    }
+}
+
+/* --- contentType: title --- */
+.HeroDemo:has(#contentType-title:checked) {
+    & #contentType-titleControls {
+        display: block;
+    }
+
+    & #contentType-titlePreambleControls {
+        display: none;
+    }
+
+    & #contentType-titleLinksControls {
+        display: none;
+    }
+
+    & #contentType-fullControls {
+        display: none;
+    }
+
+    & #contentShortPreamble {
+        display: none;
+    }
+
+    & #contentLongPreamble {
+        display: none;
+    }
+
+    & #contentButtons {
+        display: none;
+    }
+
+    /* Nested: titleLength */
+    &:has(#titleLength-short:checked) {
+        & #contentShortTitle {
+            display: block;
+        }
+
+        & #contentLongTitle {
+            display: none;
+        }
+    }
+
+    &:has(#titleLength-long:checked) {
+        & #contentShortTitle {
+            display: none;
+        }
+
+        & #contentLongTitle {
+            display: block;
+        }
+    }
+}
+
+/* --- contentType: titlePreamble --- */
+.HeroDemo:has(#contentType-titlePreamble:checked) {
+    & #contentType-titleControls {
+        display: none;
+    }
+
+    & #contentType-titlePreambleControls {
+        display: block;
+    }
+
+    & #contentType-titleLinksControls {
+        display: none;
+    }
+
+    & #contentType-fullControls {
+        display: none;
+    }
+
+    & #contentButtons {
+        display: none;
+    }
+
+    /* Nested: titlePreambleTitle */
+    &:has(#titlePreambleTitle-short:checked) {
+        & #contentShortTitle {
+            display: block;
+        }
+
+        & #contentLongTitle {
+            display: none;
+        }
+    }
+
+    &:has(#titlePreambleTitle-long:checked) {
+        & #contentShortTitle {
+            display: none;
+        }
+
+        & #contentLongTitle {
+            display: block;
+        }
+    }
+
+    /* Nested: titlePreamblePreamble */
+    &:has(#titlePreamblePreamble-short:checked) {
+        & #contentShortPreamble {
+            display: block;
+        }
+
+        & #contentLongPreamble {
+            display: none;
+        }
+    }
+
+    &:has(#titlePreamblePreamble-long:checked) {
+        & #contentShortPreamble {
+            display: none;
+        }
+
+        & #contentLongPreamble {
+            display: block;
+        }
+    }
+}
+
+/* --- contentType: titleLinks --- */
+.HeroDemo:has(#contentType-titleLinks:checked) {
+    & #contentType-titleControls {
+        display: none;
+    }
+
+    & #contentType-titlePreambleControls {
+        display: none;
+    }
+
+    & #contentType-titleLinksControls {
+        display: block;
+    }
+
+    & #contentType-fullControls {
+        display: none;
+    }
+
+    & #contentShortPreamble {
+        display: none;
+    }
+
+    & #contentLongPreamble {
+        display: none;
+    }
+
+    & #contentButtons {
+        display: flex;
+    }
+
+    /* Nested: titleLinksTitle */
+    &:has(#titleLinksTitle-short:checked) {
+        & #contentShortTitle {
+            display: block;
+        }
+
+        & #contentLongTitle {
+            display: none;
+        }
+    }
+
+    &:has(#titleLinksTitle-long:checked) {
+        & #contentShortTitle {
+            display: none;
+        }
+
+        & #contentLongTitle {
+            display: block;
+        }
+    }
+
+    /* Nested: titleLinksButtons */
+    &:has(#titleLinksButtons-one:checked) {
+        & #buttonOne {
+            display: block;
+        }
+
+        & #buttonTwo {
+            display: none;
+        }
+    }
+
+    &:has(#titleLinksButtons-two:checked) {
+        & #buttonOne {
+            display: block;
+        }
+
+        & #buttonTwo {
+            display: block;
+        }
+    }
+}
+
+/* --- contentType: full (title + links + preamble) --- */
+.HeroDemo:has(#contentType-full:checked) {
+    & #contentType-titleControls {
+        display: none;
+    }
+
+    & #contentType-titlePreambleControls {
+        display: none;
+    }
+
+    & #contentType-titleLinksControls {
+        display: none;
+    }
+
+    & #contentType-fullControls {
+        display: block;
+    }
+
+    & #contentButtons {
+        display: flex;
+    }
+
+    /* Nested: fullTitle */
+    &:has(#fullTitle-short:checked) {
+        & #contentShortTitle {
+            display: block;
+        }
+
+        & #contentLongTitle {
+            display: none;
+        }
+    }
+
+    &:has(#fullTitle-long:checked) {
+        & #contentShortTitle {
+            display: none;
+        }
+
+        & #contentLongTitle {
+            display: block;
+        }
+    }
+
+    /* Nested: fullPreamble */
+    &:has(#fullPreamble-short:checked) {
+        & #contentShortPreamble {
+            display: block;
+        }
+
+        & #contentLongPreamble {
+            display: none;
+        }
+    }
+
+    &:has(#fullPreamble-long:checked) {
+        & #contentShortPreamble {
+            display: none;
+        }
+
+        & #contentLongPreamble {
+            display: block;
+        }
+    }
+
+    /* Nested: fullButtons */
+    &:has(#fullButtons-one:checked) {
+        & #buttonOne {
+            display: block;
+        }
+
+        & #buttonTwo {
+            display: none;
+        }
+    }
+
+    &:has(#fullButtons-two:checked) {
+        & #buttonOne {
+            display: block;
+        }
+
+        & #buttonTwo {
+            display: block;
+        }
+    }
+}
