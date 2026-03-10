@@ -12,6 +12,7 @@ export default class HeroVideo {
     this.isVisible = false;
     this.hasAttached = false;
     this.userHasStartedPlayback = false;
+    this.userReducedMotionOverride = false;
     this.intersectionObserver = null;
     this.reducedMotionQuery = null;
     this.connection = null;
@@ -50,18 +51,15 @@ export default class HeroVideo {
 
   init() {
     if (!this.video) {
-      this.log("init aborted - no <video> found");
       return;
     }
 
-    this.log("init start");
     this.hasAttached = true;
     this.setupVideoElement();
     this.setupControls();
     this.setupPolicySignals();
     this.setupVideoEvents();
     this.transition("INIT");
-    this.log("init complete");
   }
 
   setupVideoElement() {
@@ -69,19 +67,10 @@ export default class HeroVideo {
     this.video.setAttribute("playsinline", "");
     this.video.setAttribute("preload", "metadata");
     this.ensureVideoId();
-    this.log("video element configured", {
-      autoplayMode: this.root.dataset.autoplay || "off",
-      muted: this.video.muted,
-      loop: this.video.loop,
-      preload: this.video.preload,
-      readyState: this.video.readyState,
-      videoId: this.video.id,
-    });
   }
 
   setupControls() {
     if (!this.mediaContainer) {
-      this.log("setupControls skipped - no .mediaContainer root");
       return;
     }
 
@@ -112,7 +101,6 @@ export default class HeroVideo {
     this.mediaContainer.prepend(this.controls);
     this.controlButton.addEventListener("click", this.handleControlToggle);
     this.updateControlsUI();
-    this.log("controls injected");
   }
 
   setupPolicySignals() {
@@ -123,19 +111,10 @@ export default class HeroVideo {
       "change",
       this.handleReducedMotionChange
     );
-    this.log("reduced motion signal attached", {
-      matches: this.reducedMotionQuery.matches,
-    });
 
     this.connection = navigator.connection || navigator.mozConnection || null;
     if (this.connection && this.connection.addEventListener) {
       this.connection.addEventListener("change", this.handleConnectionChange);
-      this.log("connection signal attached", {
-        effectiveType: this.connection.effectiveType || "unknown",
-        saveData: Boolean(this.connection.saveData),
-      });
-    } else {
-      this.log("connection signal unavailable");
     }
 
     if ("IntersectionObserver" in window) {
@@ -147,10 +126,8 @@ export default class HeroVideo {
       );
 
       this.intersectionObserver.observe(this.root);
-      this.log("intersection observer attached");
     } else {
       this.isVisible = true;
-      this.log("intersection observer unavailable");
     }
   }
 
@@ -159,7 +136,6 @@ export default class HeroVideo {
     this.video.addEventListener("error", this.handleVideoError);
     this.video.addEventListener("play", this.handleVideoPlay);
     this.video.addEventListener("pause", this.handleVideoPause);
-    this.log("video events attached");
   }
 
   transition(eventName, detail = {}) {
@@ -169,12 +145,6 @@ export default class HeroVideo {
     this.state = nextState;
     this.root.setAttribute("data-video-state", nextState);
     this.updateControlsUI();
-    this.log("transition", {
-      event: eventName,
-      from: currentState,
-      to: nextState,
-      detail,
-    });
     this.syncMediaPolicy();
   }
 
@@ -210,53 +180,29 @@ export default class HeroVideo {
       return;
     }
 
-    const shouldAttemptAutoplay = this.shouldAttemptAutoplay();
-    this.log("syncMediaPolicy", {
-      shouldAttemptAutoplay,
-      paused: this.video.paused,
-      userPaused: this.userPaused,
-      userHasStartedPlayback: this.userHasStartedPlayback,
-      state: this.state,
-    });
+    const blockers = this.getPolicyBlockers();
+    const shouldAttemptAutoplay = !Object.values(blockers).some(Boolean);
 
     if (shouldAttemptAutoplay && this.video.paused && !this.userPaused) {
       this.play({ byPolicy: true });
       return;
     }
 
-    if (
-      !shouldAttemptAutoplay &&
-      !this.video.paused &&
-      !this.userHasStartedPlayback
-    ) {
-      this.pause({ byPolicy: true });
-    }
-  }
+    if (!shouldAttemptAutoplay && !this.video.paused) {
+      const blockedOnlyByReducedMotion =
+        blockers.reducedMotion &&
+        !blockers.autoplayDisabled &&
+        !blockers.notVisible &&
+        !blockers.saveData &&
+        !blockers.slowConnection;
 
-  shouldAttemptAutoplay() {
-    const autoplayMode = this.root.dataset.autoplay || "off";
-    if (autoplayMode !== "policy") {
-      return false;
-    }
+      const canBypassWithUserIntent =
+        blockedOnlyByReducedMotion && this.userReducedMotionOverride;
 
-    if (this.reducedMotionQuery?.matches) {
-      return false;
+      if (!canBypassWithUserIntent) {
+        this.pause({ byPolicy: true });
+      }
     }
-
-    if (!this.isVisible) {
-      return false;
-    }
-
-    if (this.connection?.saveData) {
-      return false;
-    }
-
-    const effectiveType = this.connection?.effectiveType || "";
-    if (effectiveType === "slow-2g" || effectiveType === "2g") {
-      return false;
-    }
-
-    return true;
   }
 
   async play(options = {}) {
@@ -267,21 +213,14 @@ export default class HeroVideo {
     if (options.byUser) {
       this.userPaused = false;
       this.userHasStartedPlayback = true;
+      this.userReducedMotionOverride = Boolean(this.reducedMotionQuery?.matches);
     }
 
     this.policyPaused = false;
-    this.log("play() request", {
-      byUser: Boolean(options.byUser),
-      byPolicy: Boolean(options.byPolicy),
-      paused: this.video.paused,
-      muted: this.video.muted,
-    });
 
     try {
       await this.video.play();
-      this.log("play() resolved");
-    } catch (error) {
-      this.log("play() rejected", error);
+    } catch (_error) {
       this.transition("PLAY_REJECTED");
     }
   }
@@ -297,15 +236,11 @@ export default class HeroVideo {
     if (byUser) {
       this.userPaused = true;
       this.userHasStartedPlayback = false;
+      this.userReducedMotionOverride = false;
     }
 
     this.policyPaused = byPolicy;
     this.pendingPauseDetail = { byUser, byPolicy };
-    this.log("pause() request", {
-      byUser,
-      byPolicy,
-      paused: this.video.paused,
-    });
     this.video.pause();
   }
 
@@ -314,7 +249,6 @@ export default class HeroVideo {
       return;
     }
 
-    this.log("toggle() called", { paused: this.video.paused, state: this.state });
     if (this.video.paused) {
       this.play({ byUser: true });
       return;
@@ -362,21 +296,14 @@ export default class HeroVideo {
 
     delete this.root.__heroVideoInstance;
     this.hasAttached = false;
-    this.log("destroy complete");
   }
 
   handleReducedMotionChange() {
-    this.log("reduced-motion changed", {
-      matches: this.reducedMotionQuery?.matches,
-    });
+    this.userReducedMotionOverride = false;
     this.transition("POLICY_CHANGE");
   }
 
   handleConnectionChange() {
-    this.log("connection changed", {
-      effectiveType: this.connection?.effectiveType || "unknown",
-      saveData: Boolean(this.connection?.saveData),
-    });
     this.transition("POLICY_CHANGE");
   }
 
@@ -387,27 +314,19 @@ export default class HeroVideo {
     }
 
     this.isVisible = entry.isIntersecting && entry.intersectionRatio >= 0.4;
-    this.log("visibility changed", {
-      isVisible: this.isVisible,
-      isIntersecting: entry.isIntersecting,
-      intersectionRatio: entry.intersectionRatio,
-    });
     this.transition("POLICY_CHANGE");
   }
 
   handleCanPlay() {
-    this.log("video event: canplay", { readyState: this.video.readyState });
     this.transition("CANPLAY");
   }
 
   handleVideoError() {
-    this.log("video event: error", this.video.error);
     this.transition("ERROR");
   }
 
   handleVideoPlay() {
     this.policyPaused = false;
-    this.log("video event: play");
     this.transition("PLAY");
   }
 
@@ -417,13 +336,11 @@ export default class HeroVideo {
       byUser: this.userPaused,
     };
     this.pendingPauseDetail = null;
-    this.log("video event: pause", pauseDetail);
     this.transition("PAUSE", pauseDetail);
   }
 
   handleControlToggle(event) {
     event.preventDefault();
-    this.log("control button click");
     this.toggle();
   }
 
@@ -432,7 +349,7 @@ export default class HeroVideo {
       return;
     }
 
-    const isPlaying = this.state === "playing";
+    const isPlaying = this.video ? !this.video.paused : this.state === "playing";
     this.controlButton.setAttribute(
       "aria-label",
       isPlaying ? this.pauseLabel : this.playLabel
@@ -446,11 +363,6 @@ export default class HeroVideo {
     );
   }
 
-  log(message, payload) {
-    void message;
-    void payload;
-  }
-
   ensureVideoId() {
     if (!this.video) {
       return;
@@ -462,5 +374,18 @@ export default class HeroVideo {
 
     HeroVideo.instanceCount += 1;
     this.video.id = `heroVideo-${HeroVideo.instanceCount}`;
+  }
+
+  getPolicyBlockers() {
+    const autoplayMode = this.root.dataset.autoplay || "off";
+    const effectiveType = this.connection?.effectiveType || "";
+
+    return {
+      autoplayDisabled: autoplayMode !== "policy",
+      reducedMotion: Boolean(this.reducedMotionQuery?.matches),
+      notVisible: !this.isVisible,
+      saveData: Boolean(this.connection?.saveData),
+      slowConnection: effectiveType === "slow-2g" || effectiveType === "2g",
+    };
   }
 }
