@@ -15,6 +15,7 @@ State detection:
 
   & .mediaContainer {
     position: relative;
+    background-color: var(--COLOR-N95);
   }
 
   & .heroVideoControls {
