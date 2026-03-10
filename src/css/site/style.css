@@ -15,23 +15,27 @@
 /* @import "./prose.css"; */
 
 @import "./../../partials/components/HeroMedia/HeroMedia.css";
+
+@import "./../../partials/components/HeroVideo/HeroVideo.css";
+
 @import "./../../partials/components/Teaser/Teaser.css";
 
 .ExampleTeaserList {
-  --_TeaserMaxWidth: 20rem;
+  --_TeaserMaxWidth: 22rem;
   --_GridColumns: repeat(
-    auto-fill,
+    auto-fit,
     minmax(min(var(--_TeaserMaxWidth), 100%), 1fr)
   );
 
   margin-block: 10rem;
   display: grid;
   grid-template-columns: var(--_GridColumns);
-  gap: var(--grid-layout-gap);
+  column-gap: var(--grid-layout-gap);
 
   > li {
     display: flex;
     flex-direction: column;
+    margin-block-end: 1rem;
 
     > * {
       flex-grow: 1;
@@ -39,6 +43,90 @@
   }
 }
 
+/* We can do this, but then the Teaser's internal layout must be controlled from here */
+@supports (container-type: inline-size) and (grid-template-columns: subgrid) {
+  /*   .ExampleTeaserList {
+    container: teaser-list / inline-size;
+  } */
+
+  /* flow-state: block */
+  @container teaser-list (
+  (width < 27.0625rem) or
+  (45.1875rem <= width < 55.25rem) or
+  (68rem <= width < 85.4375rem) or
+  (width >= 94rem)) {
+    /* 
+    .ExampleTeaserList {
+      > li {
+        display: grid;
+        grid-template-rows: subgrid;
+        grid-row: span 4;
+        grid-template-areas:
+          "media"
+          "heading"
+          "summary"
+          "action";
+      }
+
+      & .Teaser {
+        display: grid;
+        grid-template-rows: subgrid;
+        grid-row: span 4;
+        grid-template-areas:
+          "media"
+          "heading"
+          "summary"
+          "action";
+
+        > .LayoutContainer {
+          display: grid;
+          grid-template-rows: subgrid;
+          grid-row: span 4;
+          grid-template-areas:
+            "media"
+            "heading"
+            "summary"
+            "action";
+
+          & .MediaContainer {
+            grid-area: media;
+          }
+
+          & .Heading {
+            grid-area: heading;
+            margin-block-end: auto;
+          }
+
+          & .Summary {
+            grid-area: summary;
+          }
+
+          & .Button {
+            grid-area: action;
+          }
+        }
+      }
+    } */
+  }
+
+  /* flow-state: inline */
+  @container teaser-list (
+  (27.0625rem <= width < 45.1875rem) or
+  (55.25rem <= width < 68rem) or
+  (85.4375rem <= width < 94rem)) {
+    /* 
+    .ExampleTeaserList {
+      > li {
+      }
+
+      & .Teaser {
+        --_maxInlineSize: unset;
+
+        background: hotpink;
+      }
+    } */
+  }
+}
 /* @supports (container-type: inline-size) {
   .ExampleTeaserList {
     > li:first-child {

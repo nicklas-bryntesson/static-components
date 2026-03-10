@@ -11,7 +11,7 @@ Teaser layout states:
 */
 
 .Teaser {
-  --_maxInlineSize: 40rem;
+  --_maxInlineSize: 44rem;
 
   /* Demo stuff */
   border: 1px solid var(--color-stone-200);
@@ -75,9 +75,20 @@ Teaser layout states:
 
   /* STATE A — flow-vertical */
   @container (max-width: 24.999rem) {
+    @supports not (grid-template-columns: subgrid) {
+      & .LayoutContainer {
+        display: flex;
+        flex-direction: column;
+      }
+    }
+
+    @supports (grid-template-columns: subgrid) {
+      & .LayoutContainer {
+        display: grid;
+      }
+    }
+
     & .LayoutContainer {
-      display: flex;
-      flex-direction: column;
       gap: 1rem;
 
       & .MediaContainer {

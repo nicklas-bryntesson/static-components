@@ -1,3 +1,5 @@
+import HeroVideo from "../partials/components/HeroVideo/HeroVideo.js";
+
 function load(entry) {
   console.log("loading...");
   entry.target.classList.add("inView");
@@ -27,5 +29,6 @@ imageGrid.forEach((item) => {
   imageGridObserver.observe(item);
 });
 
+HeroVideo.attach();
 
 import('./debug-panel.js').then(({ init }) => init());
