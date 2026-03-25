@@ -99,6 +99,22 @@ class DateField {
     this._digitTimer = null
     this._outsideClickHandler = null
 
+    this._handleTriggerClick = () => this._toggleCalendar()
+    this._handleNativeChange = () => {
+      if (this._syncingFromCustom) return
+      if (!this.native.value) return
+      const [y, m, d] = this.native.value.split('-').map(Number)
+      const date = new Date(y, m - 1, d)
+      this.selectedDate = date
+      this._setSegmentValue(this._getSegmentEl('day'), d)
+      this._setSegmentValue(this._getSegmentEl('month'), m)
+      this._setSegmentValue(this._getSegmentEl('year'), y)
+    }
+    this._handleFormReset = () => {
+      this.selectedDate = null
+      this._segmentEls.forEach(seg => this._clearSegment(seg))
+    }
+
     this.min = el.dataset.min ? this._parseDate(el.dataset.min) : null
     this.max = el.dataset.max ? this._parseDate(el.dataset.max) : null
 
@@ -152,6 +168,32 @@ class DateField {
     if (this._outsideClickHandler) {
       document.removeEventListener('click', this._outsideClickHandler)
     }
+
+    // Remove trigger listener
+    this.trigger?.removeEventListener('click', this._handleTriggerClick)
+
+    // Remove native change listener
+    this.native?.removeEventListener('change', this._handleNativeChange)
+
+    // Remove form reset listener
+    if (this.native?.form && this._handleFormReset) {
+      this.native.form.removeEventListener('reset', this._handleFormReset)
+    }
+
+    // Remove segment listeners
+    this._segmentEls.forEach(seg => {
+      const handlers = seg.__dateFieldHandlers
+      if (handlers) {
+        seg.removeEventListener('keydown', handlers.keydown)
+        seg.removeEventListener('focus', handlers.focus)
+        seg.removeEventListener('blur', handlers.blur)
+        delete seg.__dateFieldHandlers
+      }
+    })
+
+    // Restore aria-hidden on .Custom
+    this.custom?.setAttribute('aria-hidden', 'true')
+
     delete this.root.__dateFieldInstance
   }
 
@@ -163,9 +205,13 @@ class DateField {
     this._segmentEls.forEach(seg => {
       const type = seg.dataset.segment
       seg.setAttribute('aria-label', this.t[type] || type)
-      seg.addEventListener('keydown', e => this._handleSegmentKey(e, seg))
-      seg.addEventListener('focus', () => this._setSegmentFocused(seg))
-      seg.addEventListener('blur', () => seg.removeAttribute('data-focused'))
+      const keydownHandler = e => this._handleSegmentKey(e, seg)
+      const focusHandler = () => this._setSegmentFocused(seg)
+      const blurHandler = () => seg.removeAttribute('data-focused')
+      seg.__dateFieldHandlers = { keydown: keydownHandler, focus: focusHandler, blur: blurHandler }
+      seg.addEventListener('keydown', keydownHandler)
+      seg.addEventListener('focus', focusHandler)
+      seg.addEventListener('blur', blurHandler)
     })
   }
 
@@ -262,6 +308,12 @@ class DateField {
       const year = this._getSegmentValueByType('year') ?? new Date().getFullYear()
       seg.setAttribute('aria-valuetext', getMonthName(year, numericValue - 1, this.locale))
       seg.textContent = String(numericValue).padStart(2, '0')
+      // Keep day aria-valuemax in sync — February has 28/29 days, not 31
+      const daySeg = this._getSegmentEl('day')
+      if (daySeg) {
+        const daysInMonth = getDaysInMonth(year, numericValue - 1)
+        daySeg.setAttribute('aria-valuemax', daysInMonth)
+      }
     } else if (type === 'day') {
       seg.setAttribute('aria-valuetext', numericValue)
       seg.textContent = String(numericValue).padStart(2, '0')
@@ -335,7 +387,7 @@ class DateField {
 
   _bindTrigger() {
     this.trigger.setAttribute('aria-label', this.t.openCalendar)
-    this.trigger.addEventListener('click', () => this._toggleCalendar())
+    this.trigger.addEventListener('click', this._handleTriggerClick)
   }
 
   // ─── Value sync ─────────────────────────────────────────────────────────────
@@ -362,24 +414,11 @@ class DateField {
   _bindValueSync() {
     // Autofill: native changed externally → sync to segments
     // Guard prevents re-entry when custom UI dispatches its own change events
-    this.native.addEventListener('change', () => {
-      if (this._syncingFromCustom) return
-      if (!this.native.value) return
-      const [y, m, d] = this.native.value.split('-').map(Number)
-      const date = new Date(y, m - 1, d)
-      this.selectedDate = date
-      this._setSegmentValue(this._getSegmentEl('day'), d)
-      this._setSegmentValue(this._getSegmentEl('month'), m)
-      this._setSegmentValue(this._getSegmentEl('year'), y)
-    })
+    this.native.addEventListener('change', this._handleNativeChange)
   }
 
   _bindFormReset() {
-    this.native.form?.addEventListener('reset', () => {
-      this.selectedDate = null
-      this._segmentEls.forEach(seg => this._clearSegment(seg))
-      // No live region announcement on reset — intentional per spec
-    })
+    this.native.form?.addEventListener('reset', this._handleFormReset)
   }
 
   // ─── Calendar lifecycle ──────────────────────────────────────────────────────
