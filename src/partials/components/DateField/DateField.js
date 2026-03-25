@@ -69,7 +69,8 @@ class DateField {
   }
 
   static registerLocale(locale, strings) {
-    DateField.translations[locale] = { ...strings }
+    // Merge against en defaults so partial objects don't produce undefined keys at render time
+    DateField.translations[locale] = { ...DateField.translations.en, ...strings }
   }
 
   static attach(parent = document) {
