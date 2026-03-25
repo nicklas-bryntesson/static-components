@@ -95,13 +95,8 @@ test('aria-selected is on td not button', async ({ page }) => {
 
 test('aria-disabled is on td not button for disabled cells', async ({ page }) => {
   await page.locator('.Trigger').click()
-  const disabledTds = page.locator('.Grid td[aria-disabled="true"]')
   const disabledButtons = page.locator('.Grid button[aria-disabled="true"]')
-  // If there are disabled cells (min/max set), they should be on td
-  const tdCount = await disabledTds.count()
-  const btnCount = await disabledButtons.count()
-  expect(btnCount).toBe(0) // never on button
-  // td count >= 0 (may be 0 if no dates are disabled in view)
+  expect(await disabledButtons.count()).toBe(0) // aria-disabled never on button — only on td
   await page.keyboard.press('Escape')
 })
 
