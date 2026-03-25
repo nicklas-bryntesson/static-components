@@ -1,4 +1,6 @@
 import HeroVideo from "../partials/components/HeroVideo/HeroVideo.js";
+import DateField from "../partials/components/DateField/DateField.js";
+import svSE from "../partials/components/DateField/locales/sv-SE.json"; // Vite handles JSON imports natively
 
 function load(entry) {
   console.log("loading...");
@@ -30,5 +32,8 @@ imageGrid.forEach((item) => {
 });
 
 HeroVideo.attach();
+
+DateField.registerLocale('sv-SE', svSE);
+DateField.attach();
 
 import('./debug-panel.js').then(({ init }) => init());
