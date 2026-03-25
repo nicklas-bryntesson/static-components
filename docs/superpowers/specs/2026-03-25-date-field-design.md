@@ -1,6 +1,6 @@
 # DateField — Design Spec
 
-**Version:** 1.0
+**Version:** 1.3
 **Date:** 2026-03-25
 **Scope:** Single date picker, v1
 
@@ -33,16 +33,18 @@ With JS on `pointer: fine`: JS sets `data-input-mode="custom"` on the root. CSS 
 
 With JS on `pointer: coarse`: JS sets `data-input-mode="native"` on the root. CSS keeps the native input visible. The native OS date picker (iOS drum-scroll, Android clock face) is used as-is — it is genuinely good on touch.
 
+**Pointer detection is one-shot:** pointer mode is detected once at initialization and does not respond to device mode changes (e.g. connecting a keyboard to an iPad). This is an intentional v1 product decision — implementing a responsive listener adds complexity for a rare edge case.
+
 ### 2.3 Data-attribute contract — root element
 
-| Attribute | Values | Set by |
-|---|---|---|
-| `data-component` | `"DateField"` | Markup / server |
-| `data-input-mode` | `native \| custom` | JS (pointer detection) |
-| `data-state` | `idle \| open` | JS (calendar open/closed) |
-| `data-locale` | e.g. `"sv-SE"` | Server (optional) |
-| `data-min` | `yyyy-mm-dd` | Server (optional) |
-| `data-max` | `yyyy-mm-dd` | Server (optional) |
+| Attribute | Values | Set by | Purpose |
+|---|---|---|---|
+| `data-component` | `"DateField"` | Markup / server | JS attach hook |
+| `data-input-mode` | `native \| custom` | JS | CSS gate — shows/hides UI branches |
+| `data-state` | `idle \| open` | JS | JS-internal signal; no built-in CSS gate. Available for integrators who want to style the trigger or field wrapper when the calendar is open. |
+| `data-locale` | e.g. `"sv-SE"` | Server (optional) | Locale for month/weekday names |
+| `data-min` | `yyyy-mm-dd` | Server (optional) | Minimum selectable date |
+| `data-max` | `yyyy-mm-dd` | Server (optional) | Maximum selectable date |
 
 ### 2.4 Data-attribute contract — translatable labels
 
@@ -50,6 +52,7 @@ All screen-reader-visible strings are `data-*` attributes on the root. JS reads 
 
 | Attribute | Example value (sv-SE) | Fallback (en) |
 |---|---|---|
+| `data-label-field` | `"Födelsedatum"` | `"Date"` |
 | `data-label-day` | `"Dag"` | `"Day"` |
 | `data-label-month` | `"Månad"` | `"Month"` |
 | `data-label-year` | `"År"` | `"Year"` |
@@ -70,7 +73,9 @@ All screen-reader-visible strings are `data-*` attributes on the root. JS reads 
 | `data-placeholder` | Present when segment has no value |
 | `data-focused` | Set by JS on the active segment |
 
-### 2.6 Data-attribute contract — calendar day buttons
+### 2.6 Data-attribute contract — calendar day cells
+
+`data-*` attributes live on the `<td role="gridcell">` element, not on the inner `<button>`. CSS gates respond to `<td>`. `aria-selected` and `aria-disabled` also live on `<td>` per ARIA 1.2.
 
 | Attribute | Description |
 |---|---|
@@ -87,9 +92,21 @@ Locale is resolved in this order:
 
 1. `data-locale` on the root element (explicit, server-set)
 2. `document.documentElement.lang` (the page's canonical locale)
-3. No hardcoded third fallback
+3. `"en"` hardcoded fallback
 
 `navigator.language` is intentionally not used — it reflects the user's browser preference, not the page's language. A French visitor on a Swedish site should see Swedish month names.
+
+### 2.8 Instance uniqueness
+
+Multiple `DateField` instances on the same page require unique IDs for `aria-labelledby` references. JS maintains a static instance counter, identical to the pattern in `CoverCompositionVideo`:
+
+```js
+static instanceCount = 0;
+// In constructor:
+DateField.instanceCount += 1;
+this.instanceId = DateField.instanceCount;
+// IDs become: datefield-month-1, datefield-month-2, etc.
+```
 
 ---
 
@@ -102,6 +119,7 @@ Locale is resolved in this order:
   data-locale="sv-SE"
   data-min="1900-01-01"
   data-max="2100-12-31"
+  data-label-field="Födelsedatum"
   data-label-day="Dag"
   data-label-month="Månad"
   data-label-year="År"
@@ -123,19 +141,28 @@ Locale is resolved in this order:
     max="2100-12-31"
   />
 
-  <!-- Custom UI — hidden by default, JS sets data-input-mode="custom" on root -->
+  <!-- Custom UI — hidden by default.
+       JS removes aria-hidden and sets data-input-mode="custom" on root during init.
+       CSS never touches aria-hidden — that is exclusively JS's responsibility. -->
   <div class="Custom" aria-hidden="true">
 
-    <div class="Segments" role="group" aria-labelledby="datefield-label-1">
+    <!-- aria-label set by JS from data-label-field.
+         No aria-labelledby needed — no external element dependency. -->
+    <div class="Segments" role="group">
 
+      <!-- When data-placeholder is present:
+           - aria-valuenow attribute is absent (removed by JS)
+           - aria-valuetext is set to the placeholder string (e.g. "dd")
+           When value is set:
+           - aria-valuenow is present with the numeric value
+           - aria-valuetext is the localized string (e.g. "24" for day, "mars" for month) -->
       <span
         class="Segment"
         role="spinbutton"
         aria-label="Dag"
-        aria-valuenow="24"
         aria-valuemin="1"
         aria-valuemax="31"
-        aria-valuetext="24"
+        aria-valuetext="dd"
         tabindex="0"
         data-segment="day"
         data-placeholder
@@ -147,10 +174,9 @@ Locale is resolved in this order:
         class="Segment"
         role="spinbutton"
         aria-label="Månad"
-        aria-valuenow="3"
         aria-valuemin="1"
         aria-valuemax="12"
-        aria-valuetext="mars"
+        aria-valuetext="mm"
         tabindex="-1"
         data-segment="month"
         data-placeholder
@@ -162,84 +188,126 @@ Locale is resolved in this order:
         class="Segment"
         role="spinbutton"
         aria-label="År"
-        aria-valuenow="2026"
         aria-valuemin="1900"
         aria-valuemax="2100"
-        aria-valuetext="2026"
+        aria-valuetext="åååå"
         tabindex="-1"
         data-segment="year"
         data-placeholder
       >åååå</span>
 
+      <!-- No aria-controls — the calendar element only exists in the DOM when
+           open (teleported to body). aria-controls pointing to a non-existent
+           id is an ARIA authoring error and will fail axe-core.
+           aria-expanded + aria-haspopup="dialog" are sufficient per APG. -->
       <button
         type="button"
         class="Trigger"
         aria-label="Öppna kalender"
         aria-expanded="false"
         aria-haspopup="dialog"
-        aria-controls="datefield-calendar-1"
       ><!-- SVG calendar icon --></button>
 
     </div>
 
-    <div
-      id="datefield-calendar-1"
-      class="Calendar"
-      role="dialog"
-      aria-modal="true"
-      aria-labelledby="datefield-month-1"
-      hidden
-    >
-      <div class="CalendarHeader">
-        <button type="button" aria-label="Föregående månad">&#8249;</button>
-        <span id="datefield-month-1" aria-live="polite" aria-atomic="true">Mars 2026</span>
-        <button type="button" aria-label="Nästa månad">&#8250;</button>
-      </div>
+    <!-- Calendar template. JS locates this via data-template="datefield-calendar".
+         On open: JS clones this template content, appends clone to <body>,
+         and positions it relative to the trigger button.
+         On close: JS removes the clone from <body>.
+         The <template> element itself is never moved. -->
+    <template data-template="datefield-calendar">
+      <div
+        class="DateFieldCalendar"
+        role="dialog"
+        aria-modal="true"
+      >
+        <!-- id and aria-labelledby set by JS using instance counter -->
+        <!-- e.g. id="datefield-calendar-1" aria-labelledby="datefield-month-1" -->
 
-      <table class="Grid" role="grid" aria-labelledby="datefield-month-1">
-        <thead>
-          <tr role="row">
-            <th scope="col"><abbr title="Måndag">Mån</abbr></th>
-            <th scope="col"><abbr title="Tisdag">Tis</abbr></th>
-            <th scope="col"><abbr title="Onsdag">Ons</abbr></th>
-            <th scope="col"><abbr title="Torsdag">Tor</abbr></th>
-            <th scope="col"><abbr title="Fredag">Fre</abbr></th>
-            <th scope="col"><abbr title="Lördag">Lör</abbr></th>
-            <th scope="col"><abbr title="Söndag">Sön</abbr></th>
-          </tr>
-        </thead>
-        <tbody>
-          <!-- Generated by JS. Example day: -->
-          <tr role="row">
-            <td role="gridcell">
-              <button
-                type="button"
-                tabindex="-1"
-                aria-label="24 mars 2026"
-                aria-selected="false"
-                data-date="2026-03-24"
-              >24</button>
-            </td>
-          </tr>
-        </tbody>
-      </table>
-    </div>
+        <div class="CalendarHeader">
+          <!-- aria-label set by JS from data-label-prev-month -->
+          <button type="button">&#8249;</button>
+
+          <!-- id set by JS using instance counter, e.g. id="datefield-month-1" -->
+          <span aria-live="polite" aria-atomic="true">Mars 2026</span>
+
+          <!-- aria-label set by JS from data-label-next-month -->
+          <button type="button">&#8250;</button>
+        </div>
+
+        <table class="Grid" role="grid">
+          <!-- aria-labelledby set by JS to match CalendarHeader span id -->
+          <thead>
+            <tr role="row">
+              <!-- aria-label on <th> provides a reliable full name for SR
+                   across all SR/browser combinations. Visual text remains short.
+                   Using aria-label instead of <abbr title="..."> because
+                   abbr title behavior is inconsistent across SR/browser pairs —
+                   some read text content, some read title. aria-label is reliable. -->
+              <th scope="col" aria-label="Måndag">Mån</th>
+              <th scope="col" aria-label="Tisdag">Tis</th>
+              <th scope="col" aria-label="Onsdag">Ons</th>
+              <th scope="col" aria-label="Torsdag">Tor</th>
+              <th scope="col" aria-label="Fredag">Fre</th>
+              <th scope="col" aria-label="Lördag">Lör</th>
+              <th scope="col" aria-label="Söndag">Sön</th>
+            </tr>
+          </thead>
+          <tbody>
+            <!--
+              Generated by JS. Key structural rules per cell:
+
+              - aria-selected lives on <td role="gridcell"> (ARIA 1.2)
+              - aria-disabled lives on <td role="gridcell"> for disabled cells
+              - data-* attributes live on <td> — CSS gates respond there
+              - tabindex lives on <button> — roving tabindex target
+              - aria-label on <button> contains the full date string + state suffixes
+
+              Example of a normal day:
+              <td role="gridcell" aria-selected="false" data-date="2026-03-24">
+                <button type="button" tabindex="-1" aria-label="24 mars 2026">24</button>
+              </td>
+
+              Example of today + selected:
+              <td role="gridcell" aria-selected="true" data-date="2026-03-25" data-today data-selected>
+                <button type="button" tabindex="0" aria-label="25 mars 2026, idag, valt">25</button>
+              </td>
+
+              Example of a disabled day:
+              <td role="gridcell" aria-selected="false" aria-disabled="true"
+                  data-date="2026-01-01" data-disabled>
+                <button type="button" tabindex="-1" aria-label="1 januari 2026, ej tillgängligt">1</button>
+              </td>
+            -->
+          </tbody>
+        </table>
+      </div>
+    </template>
 
   </div>
 
-  <!-- Live region — announces selected date to screen readers -->
-  <div class="Announce" aria-live="polite" aria-atomic="true" hidden></div>
+  <!-- Live region — announces selected date to screen readers.
+       Must NOT carry the hidden attribute or display:none — those remove
+       elements from the accessibility tree and a live region not in the
+       a11y tree cannot announce anything.
+       This element stays inside .DateField root at all times — it never
+       teleports with the calendar. -->
+  <div class="Announce" aria-live="polite" aria-atomic="true"></div>
 
 </div>
 ```
 
 **Key structural rules:**
 
-- `aria-hidden="true"` on `.Custom` is removed by JS when `data-input-mode="custom"` is set — without this, screen readers ignore the entire custom UI
-- `.Announce` is never visually rendered but always in the DOM
-- Month name in `.CalendarHeader span` has `aria-live="polite"` — SR announces month changes automatically
-- Weekday `<abbr>` elements: visual short form, SR reads the full `title` value
-- Day buttons: `aria-label` includes full date string (e.g. "24 mars 2026, idag, valt"), not just the number
+- `aria-hidden="true"` on `.Custom` is removed by JS during initialization — CSS never touches it
+- `.Segments` receives `aria-label` from JS (reading `data-label-field`) — no `aria-labelledby`, no external element dependency
+- No `aria-controls` on trigger — the calendar only exists in DOM when open; a stale `aria-controls` reference to a non-existent ID is an ARIA error that axe-core will flag
+- `.Announce` is visually hidden via CSS clip pattern and stays inside `.DateField` root always — it never teleports
+- Calendar is a `<template>` element; JS clones it to `<body>` on open and removes it on close — `aria-modal` works correctly in VoiceOver/Safari only when the dialog is a body child
+- `aria-selected` and `aria-disabled` live on `<td role="gridcell">` — ARIA 1.2 defines these as supported states on `gridcell`
+- `data-*` attributes live on `<td>` — CSS gates respond to them there
+- Weekday headers use `aria-label` on `<th>` — reliable across all SR/browser combinations; `<abbr title="...">` is not used because `abbr title` behavior is inconsistent across SR/browser pairs
+- Day button `aria-label` contains the full date string + state suffixes; `<td>` carries the semantic state attributes
 
 ---
 
@@ -256,8 +324,9 @@ DateField input modes:
 - [data-input-mode="custom"]: Custom UI visible, Native hidden
 - [data-input-mode="native"]: Native visible (explicit, coarse-pointer)
 
-Calendar state:
-- [data-state="open"]: Calendar visible
+Calendar:
+- Managed as a body-level element by JS — CSS lives in .DateFieldCalendar
+- .DateField has no CSS gate for calendar visibility
 */
 
 .DateField {
@@ -337,25 +406,27 @@ Calendar state:
     }
   }
 
-  /* ===== CALENDAR ===== */
+  /* ===== LIVE REGION — visually hidden, never display:none ===== */
 
-  & .Calendar {
-    display: none;
+  & .Announce {
     position: absolute;
-    inset-block-start: 100%;
-    inset-inline-start: 0;
-    margin-block-start: 0.25rem;
-    background: Canvas;
-    border: 1px solid;
-    padding: 0.75rem;
-    z-index: 10;
+    inline-size: 1px;
+    block-size: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
   }
+}
 
-  &[data-state="open"] {
-    & .Calendar {
-      display: block;
-    }
-  }
+/* ===== CALENDAR — top-level class, body child at runtime ===== */
+
+.DateFieldCalendar {
+  position: fixed;
+  background: Canvas;
+  border: 1px solid;
+  padding: 0.75rem;
+  z-index: 10;
+  /* Position (top/left) is set by JS using trigger getBoundingClientRect() */
 
   & .CalendarHeader {
     display: flex;
@@ -404,26 +475,33 @@ Calendar state:
         outline: 2px solid;
         outline-offset: 2px;
       }
+    }
 
-      &[data-today] {
-        font-weight: bold;
-        text-decoration: underline;
-      }
+    /* ===== STATE GATES ON <td role="gridcell"> ===== */
 
-      &[data-selected] {
-        background-color: Highlight;
-        color: HighlightText;
-      }
+    & td[data-today] button {
+      /* Non-color indicator required — color alone fails WCAG 1.4.1 */
+      font-weight: bold;
+      text-decoration: underline;
+    }
 
-      &[data-disabled] {
-        --_disabledColor: #767676; /* 4.54:1 against Canvas — WCAG AA */
-        color: var(--_disabledColor);
-        cursor: not-allowed;
-      }
+    & td[data-selected] button {
+      background-color: Highlight;
+      color: HighlightText;
+    }
 
-      &[data-outside-month] {
-        color: GrayText;
-      }
+    & td[data-disabled] button {
+      --_disabledColor: #767676; /* 4.54:1 against Canvas — WCAG AA */
+      color: var(--_disabledColor);
+      cursor: not-allowed;
+      /* aria-disabled="true" on <td> provides the semantic signal.
+         Color + cursor provides the visual signal.
+         No additional non-color indicator is specified — aria-disabled
+         covers the accessibility requirement. */
+    }
+
+    & td[data-outside-month] button {
+      color: GrayText;
     }
   }
 }
@@ -431,9 +509,12 @@ Calendar state:
 
 **Key CSS rules:**
 
-- `data-disabled` uses explicit color (`#767676`), never `opacity` — opacity-based disabled states typically fail WCAG AA contrast requirements
-- Calendar visibility is controlled by `&[data-state="open"]` gate on the root — JS owns the state attribute, CSS owns the visibility. JS never toggles `display` directly.
-- `:focus-visible` is used throughout, never `:focus` — avoids unwanted focus rings on mouse interaction
+- `.Announce` uses the clip/overflow visually-hidden pattern — never `display: none` or `hidden`
+- `.DateFieldCalendar` is a top-level class — the calendar is a body child at runtime, so it cannot be scoped inside `.DateField`
+- State gates live on `<td>` (`td[data-today]`, `td[data-selected]`, etc.) — consistent with where `data-*` attributes are placed in the HTML contract
+- `data-disabled` uses explicit color (`#767676`), never `opacity`
+- `:focus-visible` throughout, never `:focus`
+- JS owns the calendar's position coordinates via `style.top`/`style.left` from `getBoundingClientRect()`
 
 ---
 
@@ -441,13 +522,20 @@ Calendar state:
 
 ### 5.1 Class API
 
-Follows the same attach pattern as `CoverCompositionVideo`:
+Follows the same attach and cleanup pattern as `CoverCompositionVideo`:
 
 ```js
 class DateField {
+  static instanceCount = 0;
   static attach(parent = document) { /* scan and instantiate */ }
   constructor(el) { /* init */ }
-  destroy() { /* clean up listeners, remove injected elements */ }
+  destroy() {
+    /* Remove all event listeners
+       Remove calendar element from <body> if present
+       Restore aria-hidden on .Custom
+       Delete instance reference from root element
+       (delete this.root.__dateFieldInstance) */
+  }
 }
 ```
 
@@ -455,8 +543,16 @@ class DateField {
 
 1. Detect pointer type via `window.matchMedia("(pointer: coarse)")`
 2. Set `data-input-mode` on root
-3. If `custom`: remove `aria-hidden` from `.Custom`, set up segment interaction, set up calendar, set up value sync
-4. If `native`: no further setup needed
+3. Increment `DateField.instanceCount`, store as `this.instanceId`
+4. If `custom`:
+   - Remove `aria-hidden` from `.Custom` (JS owns this, CSS never touches it)
+   - Set `aria-label` on `.Segments` from `data-label-field`
+   - Cache label strings from `data-*` attributes with English fallbacks
+   - Set up segment interaction
+   - Set up calendar lifecycle (template cloning, teleport, positioning, outside-click)
+   - Set up value sync listeners
+   - Store instance reference: `this.root.__dateFieldInstance = this`
+5. If `native`: no further setup needed
 
 ### 5.3 State machine
 
@@ -466,7 +562,7 @@ open  ──[CLOSE]──▶ idle
 open  ──[SELECT]──▶ idle
 ```
 
-JS sets `data-state` on root. CSS reacts. JS never toggles `display` directly on `.Calendar`.
+JS sets `data-state="open"` / `data-state="idle"` on root. The calendar element is appended to `<body>` on open and removed on close.
 
 ### 5.4 Segment keyboard contract
 
@@ -478,79 +574,166 @@ Implemented for keyboard-only users. Screen reader users navigate via their own 
 | `ArrowDown` | Decrement segment, wrap at min |
 | `ArrowLeft` | Move focus to previous segment |
 | `ArrowRight` | Move focus to next segment |
-| `0–9` | Digit entry, auto-advance when segment is full |
+| `0–9` | Digit entry — see auto-advance rules below |
 | `Backspace` | Clear segment, move focus to previous segment |
 | `Escape` | Close calendar if open |
 
 **Auto-advance rules:**
-- Day: first digit > 3 → advance immediately. Otherwise wait for second digit.
-- Month: first digit > 1 → advance immediately. Otherwise wait for second digit.
-- Year: advance after 4 digits.
+- Day: first digit > 3 → advance immediately to month. First digit ≤ 3 → wait up to 1 second for a second digit, then commit and advance.
+- Month: first digit > 1 → advance immediately to year. First digit = 1 → wait up to 1 second for a second digit, then commit and advance.
+- Year: advance after 4 digits. No timeout.
+
+The 1-second timeout covers ambiguous first digits (e.g. day=`3` which could be `3`, `30`, or `31`). After timeout, the current single digit is committed and focus advances.
 
 **Roving tabindex:** Only one segment holds `tabindex="0"` at a time. `ArrowLeft`/`ArrowRight` moves it. `Tab` exits the segment group naturally.
 
 **ARIA updates on each segment change:**
-- `aria-valuenow` — numeric value (e.g. `3`)
-- `aria-valuetext` — human-readable value (e.g. `"mars"` for month, localized)
+- When value is set: add `aria-valuenow` (numeric) and update `aria-valuetext` (localized, e.g. `"mars"` for month)
+- When segment is cleared: remove `aria-valuenow`, set `aria-valuetext` to the placeholder string (e.g. `"dd"`, `"mm"`, `"åååå"`)
 - `data-placeholder` — removed when value is set, added when cleared
+- `aria-valuemax` on day segment must be updated when month or year changes (February = 28/29 days, April/June/September/November = 30 days)
 
 ### 5.5 Calendar behavior contract
 
+**Template and teleport:**
+JS locates the calendar template via `root.querySelector('[data-template="datefield-calendar"]')`. On open, JS clones the template content, sets all dynamic IDs and labels, appends the clone to `<body>`, and positions it. On close, JS removes the clone from `<body>`. The `<template>` element itself never moves.
+
 **Opening:**
-1. Set `data-state="open"` on root
-2. Update trigger: `aria-expanded="true"`, `aria-label` → close label
-3. Move focus to: selected date → today → first non-disabled day
+1. Clone template content. On the cloned dialog element set:
+   - `id="datefield-calendar-{instanceId}"`
+   - `aria-labelledby="datefield-month-{instanceId}"`
+   On the `CalendarHeader` span set:
+   - `id="datefield-month-{instanceId}"`
+   Set all button `aria-label` values from the cached label strings.
+2. Render current month days into calendar grid
+3. Append calendar to `<body>`
+4. Position calendar relative to trigger: `triggerRect = trigger.getBoundingClientRect()`
+5. Set `data-state="open"` on root
+6. Update trigger: `aria-expanded="true"`, `aria-label` → `data-label-close-calendar`
+7. Move focus to: selected date button → today button → first non-disabled day button
 
 **Closing (Escape, outside click, or date selected):**
-1. Set `data-state="idle"` on root
-2. Update trigger: `aria-expanded="false"`, `aria-label` → open label
-3. Return focus to trigger button
+1. Remove calendar clone from `<body>`
+2. Set `data-state="idle"` on root
+3. Update trigger: `aria-expanded="false"`, `aria-label` → `data-label-open-calendar`
+4. Return focus to trigger button
 
-**Focus trap:**
-`Tab` and `Shift+Tab` cycle only within the calendar while it is open.
+**Outside-click detection:**
+Because the calendar is a body-level element (not a descendant of `.DateField`), the outside-click handler must check against both:
+```js
+if (!root.contains(e.target) && !calendarEl.contains(e.target)) {
+  close();
+}
+```
+A check against only `root` would close the calendar on every click within it.
+
+**Focus trap — complete specification:**
+Focusable elements in the calendar: prev-month button, next-month button, and the day buttons.
+
+**Two traversal modes — these are distinct and must not be conflated:**
+1. **Arrow-key navigation (grid):** All day buttons participate, including disabled ones. Disabled day buttons are focusable so SR users can discover and read their label.
+2. **Tab-wrap cycle:** Collects only non-disabled day buttons (excluding `<td[aria-disabled="true"]> button>`) plus prev-month and next-month buttons. The disabled day buttons must not participate in Tab order.
+
+Tab-wrap implementation:
+```js
+// Collect Tab-eligible elements (excludes disabled day buttons).
+// Uses aria-disabled (not data-disabled) because aria-disabled is the
+// canonical ARIA state attribute on <td role="gridcell"> — data-disabled
+// is the CSS hook. Selecting against the ARIA state avoids accidental
+// inclusion of disabled cells if data-disabled is temporarily absent.
+const tabbable = [
+  prevButton,
+  ...Array.from(grid.querySelectorAll('td:not([aria-disabled="true"]) button')),
+  nextButton
+].filter(el => !el.hidden);
+
+// On keydown Tab within calendar:
+if (e.key === 'Tab') {
+  const first = tabbable[0];
+  const last = tabbable[tabbable.length - 1];
+  if (!e.shiftKey && document.activeElement === last) {
+    e.preventDefault();
+    first.focus();
+  } else if (e.shiftKey && document.activeElement === first) {
+    e.preventDefault();
+    last.focus();
+  }
+}
+```
 
 **Month navigation:**
-Update month heading text. `aria-live="polite"` on the heading announces the new month to SR automatically.
+Update the CalendarHeader span text. `aria-live="polite"` on the heading announces the new month to SR automatically.
 
-**Day keyboard navigation** (for keyboard-only users):
+**Day keyboard navigation — grid scope only** (for keyboard-only users, aligned with ARIA APG):
+
+These keys are captured only when focus is on a day button inside `.Grid`. When focus is on the prev/next month buttons, only the standard button keyboard behavior applies.
 
 | Key | Behavior |
 |---|---|
 | `ArrowLeft` / `ArrowRight` | Previous / next day |
-| `ArrowUp` / `ArrowDown` | Previous / next week |
-| `PageUp` / `PageDown` | Previous / next month |
-| `Home` / `End` | First / last day of month |
+| `ArrowUp` / `ArrowDown` | Same weekday, previous / next week |
+| `PageUp` / `PageDown` | Same day, previous / next month |
+| `Home` | First day of the current week row |
+| `End` | Last day of the current week row |
+| `Ctrl+Home` | First non-disabled day of the current month |
+| `Ctrl+End` | Last non-disabled day of the current month |
 | `Enter` / `Space` | Select date |
 | `Escape` | Close calendar |
 
-**Roving tabindex in grid:** One day button holds `tabindex="0"` at a time. All others hold `tabindex="-1"`.
+`Home`/`End` navigate within the current week row (Monday–Sunday). `Ctrl+Home`/`Ctrl+End` move to month boundaries, consistent with the ARIA APG Date Picker Dialog pattern.
 
-**Day `aria-label` format:**
-`"24 mars 2026"` — plain date for normal days
-`"24 mars 2026, idag"` — today (appends `data-label-today`)
-`"24 mars 2026, valt"` — selected (appends `data-label-selected`)
-`"24 mars 2026, ej tillgängligt"` — disabled (appends `data-label-disabled`)
+When arrow-key navigation crosses a month boundary (e.g. `ArrowLeft` from the 1st), the calendar navigates to the adjacent month and focuses the appropriate day.
+
+**Roving tabindex in grid:** One day button holds `tabindex="0"` at a time. All others hold `tabindex="-1"`. Focus moves to the button inside the target `<td>`.
+
+**`data-disabled` interaction contract:**
+- Disabled cells are focusable via arrow-key navigation (SR must discover them)
+- Clicks and `Enter`/`Space` on disabled cells are ignored — event handler returns early
+- `aria-disabled="true"` is set on `<td role="gridcell">` for disabled cells
+- `disabled` attribute is never used on day buttons
+
+**Outside-month day interaction contract:**
+Clicking or activating a day with `data-outside-month` navigates the calendar to that month and selects the date. Outside-month days are not disabled unless they fall outside the min/max range.
+
+**Day `aria-label` format (on `<button>`):**
+
+Full label built by concatenating applicable suffixes in this fixed order:
+
+1. Full date string: `"24 mars 2026"`
+2. If today: `, idag` (from `data-label-today`)
+3. If selected: `, valt` (from `data-label-selected`)
+4. If disabled: `, ej tillgängligt` (from `data-label-disabled`)
+
+Outside-month days have no special label suffix — their date string already places them in a different month. A day that is today + selected → `"24 mars 2026, idag, valt"`.
 
 ### 5.6 Value sync contract
 
 ```
-Segment input  ──▶  syncToNative()  ──▶  native.value = "yyyy-mm-dd"
-                                     ──▶  dispatch "change" (bubbles: true)
+Segment input   ──▶  syncToNative()   ──▶  native.value = "yyyy-mm-dd"
+                                       ──▶  dispatch "change" (bubbles: true)
+                                       ──▶  announce via .Announce: "Valt datum: 24 mars 2026"
 
-native "change" (autofill)  ──▶  syncFromNative()  ──▶  update segment display
-form "reset"                ──▶  clearSegments()   ──▶  restore all segments to placeholder
+native "change" (autofill)   ──▶  syncFromNative()   ──▶  update segment display
+form "reset"                 ──▶  clearSegments()    ──▶  restore all segments to placeholder
+                                                      ──▶  no live region announcement on reset
 ```
+
+Live region announcement fires only on intentional date selection. Form reset does not announce — it is a user-initiated bulk action.
 
 **Timezone rule (critical):**
 Always construct dates as `new Date(year, month, day)` — never `new Date("yyyy-mm-dd")`.
-ISO string parsing is treated as UTC midnight and will produce the wrong local date in negative-offset timezones.
+ISO string parsing treats the string as UTC midnight and will produce the wrong local date in negative-offset timezones.
 
 ### 5.7 Locale rendering
 
 ```js
-getLocale()              // data-locale → document.documentElement.lang
-getMonthName(y, m)       // Intl.DateTimeFormat, e.g. "mars"
-getWeekdayNames()        // Intl.DateTimeFormat, normalized to Monday-start
+getLocale()           // data-locale → document.documentElement.lang → "en"
+getMonthName(y, m)    // Intl.DateTimeFormat, e.g. "mars" for sv-SE
+getWeekdayNames()     // Intl.DateTimeFormat — always returns 7-element array
+                      // starting from Monday regardless of locale.
+                      // Locale affects names (e.g. "Mån" vs "Mon"),
+                      // not start day. Calendar always starts on Monday.
+                      // This is an intentional product decision.
 ```
 
 ---
@@ -559,7 +742,7 @@ getWeekdayNames()        // Intl.DateTimeFormat, normalized to Monday-start
 
 ### 6.1 Screen reader philosophy
 
-The keyboard shortcuts in section 5.4 and 5.5 are implemented **for keyboard-only users**, not for screen reader users. VoiceOver (macOS) uses `VO + arrow keys` to navigate; NVDA and JAWS use their own command sets. The component must not assume or document that SR users press specific keys.
+The keyboard shortcuts in sections 5.4 and 5.5 are implemented **for keyboard-only users**, not for screen reader users. VoiceOver (macOS) uses `VO + arrow keys` to navigate; NVDA and JAWS use their own command sets. The component must not assume or document that SR users press specific keys.
 
 Correct SR support is achieved through:
 - Correct semantic HTML elements
@@ -572,17 +755,27 @@ Correct SR support is achieved through:
 - [ ] All interactive elements are keyboard reachable
 - [ ] Focus order follows DOM order — `tabindex > 0` is never used
 - [ ] Focus is always visible via `:focus-visible` outline
-- [ ] Focus outline is visible against all background colors (minimum 3:1 contrast against adjacent colors — WCAG 2.2 2.4.11)
-- [ ] All form controls have associated labels
+- [ ] Focus outline visible against all backgrounds (min 3:1 contrast — WCAG 2.2 2.4.11)
+- [ ] `.Segments` has `aria-label` set by JS from `data-label-field`
 - [ ] `aria-label` on every segment reflects current value and role
+- [ ] `aria-valuenow` absent when segment is in placeholder state
+- [ ] `aria-valuemax` on day segment kept in sync with selected month/year
 - [ ] `aria-expanded` on trigger reflects calendar open/closed state
-- [ ] `aria-live` regions announce: month navigation, selected date
-- [ ] Disabled days use `aria-disabled="true"` — not the `disabled` attribute (which removes elements from focus entirely and makes them undiscoverable to SR)
-- [ ] Disabled day color achieves 4.5:1 contrast against background (explicit color, not opacity)
-- [ ] No color-only state communication — `data-today` uses bold + underline, not color alone
-- [ ] Component works correctly in forced colors / high contrast mode (system color keywords)
-- [ ] Motion: no animations that violate `prefers-reduced-motion` (not applicable in v1 — no animations)
-- [ ] All visible text meets 4.5:1 contrast (normal text) or 3:1 (large text)
+- [ ] No `aria-controls` on trigger — avoids stale ID reference when calendar is closed
+- [ ] `aria-live` regions announce: month navigation (via heading), selected date (via `.Announce`)
+- [ ] `.Announce` is visually hidden via CSS clip pattern, never `hidden` or `display: none`
+- [ ] `.Announce` stays inside `.DateField` root — never teleports
+- [ ] Calendar is appended to `<body>` on open — `aria-modal` works in VoiceOver/Safari
+- [ ] `aria-selected` lives on `<td role="gridcell">` (ARIA 1.2)
+- [ ] `aria-disabled="true"` on `<td>` for disabled cells — `disabled` attribute never used
+- [ ] Disabled day buttons are focusable via arrow-key navigation (SR discovery)
+- [ ] Disabled day buttons excluded from Tab-wrap cycle
+- [ ] Disabled day color achieves 4.5:1 contrast (explicit color, not opacity)
+- [ ] No color-only state communication — `data-today` uses bold + underline
+- [ ] Component works in forced colors / high contrast (system color keywords)
+- [ ] Weekday headers use `aria-label` on `<th>` — not `<abbr title>` (unreliable across SR/browser)
+- [ ] All visible text meets 4.5:1 contrast (normal) or 3:1 (large text)
+- [ ] Multiple instances on same page have unique IDs (instance counter pattern)
 
 ---
 
@@ -602,32 +795,67 @@ Correct SR support is achieved through:
 |---|---|
 | JS disabled — native input visible | Playwright |
 | `pointer: coarse` — `data-input-mode="native"` set | Playwright |
-| `pointer: fine` — `data-input-mode="custom"` set | Playwright |
-| Segment: ArrowUp/Down increments/decrements | Playwright |
-| Segment: digit entry, auto-advance day > 3 | Playwright |
-| Segment: digit entry, auto-advance month > 1 | Playwright |
+| `pointer: fine` — `data-input-mode="custom"` set, `aria-hidden` removed from `.Custom` | Playwright |
+| `.Segments` `aria-label` matches `data-label-field` | Playwright |
+| Segment placeholder state: `aria-valuenow` absent, `aria-valuetext` = placeholder string | Playwright |
+| Segment filled state: `aria-valuenow` present, `aria-valuetext` = localized string | Playwright |
+| Segment: ArrowUp/Down increments/decrements, wraps at boundary | Playwright |
+| Segment: day first digit > 3 auto-advances immediately | Playwright |
+| Segment: month first digit > 1 auto-advances immediately | Playwright |
+| Segment: ambiguous first digit (day=3, month=1) advances after 1 second | Playwright |
+| Segment: year advances after 4 digits | Playwright |
 | Segment: Backspace clears and moves focus back | Playwright |
+| Segment: `aria-valuemax` on day updates when month changes to February | Playwright |
 | Segment → native sync on complete date | Playwright |
 | Native autofill → segment display sync | Playwright |
-| Form reset → segments restore to placeholder | Playwright |
+| Form reset → segments restore to placeholder, no live region announcement | Playwright |
+| Calendar element does not exist in DOM when closed | Playwright |
+| Calendar is a child of `<body>` when open | Playwright |
+| Calendar removed from `<body>` on close | Playwright |
+| No `aria-controls` on trigger at any time | Playwright |
 | Calendar opens, focus moves to selected date | Playwright |
+| Calendar opens with no selection, focus moves to today | Playwright |
+| Calendar opens with no selection and no today visible, focus moves to first non-disabled day | Playwright |
 | Calendar: Escape closes, focus returns to trigger | Playwright |
-| Calendar: ArrowKey navigation moves focus | Playwright |
-| Calendar: PageUp/Down navigates months | Playwright |
-| Calendar: date selection closes calendar and syncs native | Playwright |
-| Dates outside min/max have `data-disabled` and are not selectable | Playwright |
-| `aria-label` on today includes today-label | Playwright |
-| `aria-label` on selected date includes selected-label | Playwright |
+| Calendar: outside click closes (click outside both root and calendar) | Playwright |
+| Calendar: click inside calendar does not close | Playwright |
+| Calendar: Tab wraps from last to first non-disabled element | Playwright |
+| Calendar: Shift+Tab wraps from first to last non-disabled element | Playwright |
+| Calendar: disabled day buttons excluded from Tab-wrap | Playwright |
+| Calendar: disabled day buttons reachable via ArrowKey navigation | Playwright |
+| Calendar: ArrowLeft/Right moves focus day by day | Playwright |
+| Calendar: ArrowUp/Down moves focus by week | Playwright |
+| Calendar: PageUp/Down navigates months (grid scope only) | Playwright |
+| Calendar: PageUp/Down does not trigger when focus is on prev/next buttons | Playwright |
+| Calendar: Home moves to first day of week row | Playwright |
+| Calendar: End moves to last day of week row | Playwright |
+| Calendar: Ctrl+Home moves to first non-disabled day of month | Playwright |
+| Calendar: Ctrl+End moves to last non-disabled day of month | Playwright |
+| Calendar: ArrowLeft from 1st navigates to previous month | Playwright |
+| Calendar: date selection closes calendar, syncs native, announces via live region | Playwright |
+| Calendar: outside-month day click navigates to that month and selects | Playwright |
+| `aria-selected` is on `<td>`, not on `<button>` | Playwright |
+| `aria-disabled="true"` is on `<td>` for disabled cells | Playwright |
+| Dates outside min/max have `data-disabled` on `<td>`, activation has no effect | Playwright |
+| `aria-label` on today's button includes today-label | Playwright |
+| `aria-label` on selected button includes selected-label | Playwright |
+| `aria-label` on today + selected button: today label precedes selected label | Playwright |
+| `aria-label` on disabled button includes disabled-label | Playwright |
+| Two instances on same page have distinct `id` values | Playwright |
 | axe-core: zero violations on initial render | Playwright + axe |
 | axe-core: zero violations with calendar open | Playwright + axe |
 | Forced colors: component renders without broken states | Playwright |
 | getDaysInMonth — leap year Feb 2024 = 29 | Vitest |
 | getDaysInMonth — non-leap Feb 2023 = 28 | Vitest |
 | ISO week number edge cases | Vitest |
-| min/max constraint: prev-month disabled at min boundary | Vitest |
-| Timezone: `new Date(2026, 2, 24)` never shifts date | Vitest |
-| Locale: sv-SE weekdays start on Monday | Vitest |
-| Locale: en-US weekdays start on Sunday | Vitest |
+| min/max constraint: day disabled at min/max boundary | Vitest |
+| Timezone: `new Date(2026, 2, 24)` produces correct local date | Vitest |
+| getWeekdayNames: always returns Monday-first 7-element array | Vitest |
+| getWeekdayNames: sv-SE returns Swedish day names starting Monday | Vitest |
+| getWeekdayNames: en-US returns English day names starting Monday | Vitest |
+| getLocale: returns `data-locale` when set | Vitest |
+| getLocale: falls back to `document.documentElement.lang` when `data-locale` absent | Vitest |
+| getLocale: falls back to `"en"` when both absent | Vitest |
 
 ### 7.3 Manual SR test script
 
@@ -635,17 +863,18 @@ Correct SR support is achieved through:
 
 | Step | Expected outcome |
 |---|---|
-| Tab into component | SR announces segment role and current value |
-| Adjust segment value | SR announces updated value |
-| Navigate between segments | SR announces each segment label |
-| Open calendar via trigger | SR announces dialog open, focus confirmed inside dialog |
-| Navigate calendar days | SR announces full date for each day |
-| Navigate to today | SR announces today label |
-| Navigate to disabled day | SR announces disabled label |
-| Navigate months | SR announces new month name |
-| Select a date | SR announces selected date via live region, dialog closes |
-| Return focus after close | Focus is on trigger button |
+| Tab into component | SR announces group label (field name) and first segment role + value |
+| Adjust segment value | SR announces updated value via spinbutton role |
+| Navigate between segments | SR announces each segment's label |
+| Open calendar via trigger button | SR announces dialog title, focus confirmed inside dialog |
+| Navigate calendar days via SR commands | SR announces full date string for each day |
+| Navigate to today | SR announces today label appended to date |
+| Navigate to disabled day via arrow-key | SR announces disabled label; activation has no effect |
+| Navigate months | SR announces new month name via live heading |
+| Select a date | SR announces selected date via `.Announce` live region; dialog closes |
+| Return focus after close | Focus is on trigger button; SR confirms |
 | Tab out of component | Focus exits component naturally |
+| Form reset | Segments return to placeholder; SR makes no announcement |
 
 ---
 
@@ -655,10 +884,10 @@ This component is a reference implementation in vanilla HTML/CSS/JS. Ports to ot
 
 **React / Vue / Svelte:** Preserve `data-*` attribute names as props. Map lifecycle hooks to `constructor` / `destroy`. Listen to native `change` event on the hidden input for value binding.
 
-**CMS:** Map CMS fields to `data-*` attributes on the root element. Locale and min/max should be set server-side.
+**CMS:** Map CMS fields to `data-*` attributes on the root element. Locale and min/max should be set server-side. All `data-label-*` attributes should be populated from the CMS translation layer.
 
 **Web Component:** Wrap `DateField` class in `connectedCallback` / `disconnectedCallback`. Expose `value` getter/setter that reads/writes the native input.
 
 ---
 
-*Created: 2026-03-25*
+*Created: 2026-03-25 | Updated: 2026-03-25 (v1.3 — third spec review pass)*
