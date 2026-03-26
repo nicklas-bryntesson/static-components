@@ -259,6 +259,38 @@ function makeField({ disabled = false, value = '', min = '', max = '', locale = 
   return { el, instance }
 }
 
+describe('DateField — initial value sync', () => {
+  it('populates segments from native value attribute on mount', () => {
+    const { el } = makeField({ value: '1990-06-15' })
+    expect(el.querySelector('[data-segment="day"]').getAttribute('aria-valuenow')).toBe('15')
+    expect(el.querySelector('[data-segment="month"]').getAttribute('aria-valuenow')).toBe('6')
+    expect(el.querySelector('[data-segment="year"]').getAttribute('aria-valuenow')).toBe('1990')
+    el.remove()
+  })
+
+  it('sets selectedDate from native value on mount', () => {
+    const { el, instance } = makeField({ value: '1990-06-15' })
+    expect(instance.selectedDate).not.toBeNull()
+    expect(instance.selectedDate.getFullYear()).toBe(1990)
+    expect(instance.selectedDate.getMonth()).toBe(5) // June is month index 5
+    expect(instance.selectedDate.getDate()).toBe(15)
+    el.remove()
+  })
+
+  it('leaves segments as placeholders when no initial value', () => {
+    const { el } = makeField()
+    expect(el.querySelector('[data-segment="day"]').hasAttribute('data-placeholder')).toBe(true)
+    el.remove()
+  })
+
+  it('populates segments from initial value even when field is disabled', () => {
+    const { el } = makeField({ disabled: true, value: '1990-06-15' })
+    expect(el.querySelector('[data-segment="day"]').getAttribute('aria-valuenow')).toBe('15')
+    expect(el.querySelector('[data-segment="year"]').getAttribute('aria-valuenow')).toBe('1990')
+    el.remove()
+  })
+})
+
 describe('DateField — disabled state', () => {
   it('sets all segments to tabindex="-1" when native is disabled', () => {
     const { el } = makeField({ disabled: true })

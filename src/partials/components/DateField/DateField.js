@@ -159,8 +159,11 @@ class DateField {
 
     this._initSegments()
     this._bindTrigger()
-    this._bindValueSync()
-    this._bindFormReset()
+    if (!this.native.disabled) {
+      this._bindValueSync()
+      this._bindFormReset()
+    }
+    this._syncInitialValue()
   }
 
   destroy() {
@@ -428,6 +431,15 @@ class DateField {
 
   _bindFormReset() {
     this.native.form?.addEventListener('reset', this._handleFormReset)
+  }
+
+  _syncInitialValue() {
+    if (!this.native.value) return
+    const [y, m, d] = this.native.value.split('-').map(Number)
+    this.selectedDate = new Date(y, m - 1, d)
+    this._setSegmentValue(this._getSegmentEl('day'), d)
+    this._setSegmentValue(this._getSegmentEl('month'), m)
+    this._setSegmentValue(this._getSegmentEl('year'), y)
   }
 
   // ─── Calendar lifecycle ──────────────────────────────────────────────────────
