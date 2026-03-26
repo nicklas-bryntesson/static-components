@@ -14,9 +14,9 @@
 
 /* @import "./prose.css"; */
 
-@import "./../../partials/components/HeroMedia/HeroMedia.css";
+@import "./../../partials/components/CoverCompositionMedia/CoverCompositionMedia.css";
 
-@import "./../../partials/components/HeroVideo/HeroVideo.css";
+@import "./../../partials/components/CoverCompositionVideo/CoverCompositionVideo.css";
 
 @import "./../../partials/components/Teaser/Teaser.css";
 

@@ -1,6 +1,6 @@
 # DateField — Design Spec
 
-**Version:** 1.3
+**Version:** 1.4
 **Date:** 2026-03-25
 **Scope:** Single date picker, v1
 
@@ -46,24 +46,72 @@ With JS on `pointer: coarse`: JS sets `data-input-mode="native"` on the root. CS
 | `data-min` | `yyyy-mm-dd` | Server (optional) | Minimum selectable date |
 | `data-max` | `yyyy-mm-dd` | Server (optional) | Maximum selectable date |
 
-### 2.4 Data-attribute contract — translatable labels
+### 2.4 i18n contract
 
-All screen-reader-visible strings are `data-*` attributes on the root. JS reads exclusively from these — never hardcoded strings. English fallback values are defined in JS for each attribute.
+Generic UI strings (segment labels, calendar button labels, state suffixes) live in **per-locale translation files**, not in markup. `data-*` attributes are reserved for data that is instance-specific or that changes at runtime based on user interaction.
 
-| Attribute | Example value (sv-SE) | Fallback (en) |
-|---|---|---|
-| `data-label-field` | `"Födelsedatum"` | `"Date"` |
-| `data-label-day` | `"Dag"` | `"Day"` |
-| `data-label-month` | `"Månad"` | `"Month"` |
-| `data-label-year` | `"År"` | `"Year"` |
-| `data-label-open-calendar` | `"Öppna kalender"` | `"Open calendar"` |
-| `data-label-close-calendar` | `"Stäng kalender"` | `"Close calendar"` |
-| `data-label-prev-month` | `"Föregående månad"` | `"Previous month"` |
-| `data-label-next-month` | `"Nästa månad"` | `"Next month"` |
-| `data-label-today` | `"idag"` | `"today"` |
-| `data-label-selected` | `"valt"` | `"selected"` |
-| `data-label-disabled` | `"ej tillgängligt"` | `"not available"` |
-| `data-label-announce` | `"Valt datum:"` | `"Selected date:"` |
+#### Registration API
+
+```js
+DateField.registerLocale('sv-SE', {
+  day:              'Dag',
+  month:            'Månad',
+  year:             'År',
+  openCalendar:     'Öppna kalender',
+  closeCalendar:    'Stäng kalender',
+  prevMonth:        'Föregående månad',
+  nextMonth:        'Nästa månad',
+  today:            'idag',
+  selected:         'valt',
+  notAvailable:     'ej tillgängligt',
+  announceSelected: 'Valt datum:',
+})
+```
+
+`registerLocale` is a static method. It must be called before `DateField.attach()`. The component ships with `en` registered by default — no setup required for English. Calling `registerLocale` for a locale the component already knows overwrites it.
+
+**Locale resolution at runtime** (unchanged from 2.7):
+`data-locale` → `document.documentElement.lang` → `"en"`
+
+If the resolved locale has no registered translations, the component falls back to `"en"`.
+
+#### JSON source format
+
+The JSON file per locale is the canonical source. How it reaches the browser (static import, dynamic import, inline script) is the app's responsibility.
+
+```json
+{
+  "day":              "Dag",
+  "month":            "Månad",
+  "year":             "År",
+  "openCalendar":     "Öppna kalender",
+  "closeCalendar":    "Stäng kalender",
+  "prevMonth":        "Föregående månad",
+  "nextMonth":        "Nästa månad",
+  "today":            "idag",
+  "selected":         "valt",
+  "notAvailable":     "ej tillgängligt",
+  "announceSelected": "Valt datum:"
+}
+```
+
+#### Field label
+
+The field label ("Födelsedatum", "Departure date", etc.) is instance-specific — it is not a generic locale string. It comes from the associated `<label>` element in HTML, not from a data-attr. JS detects the label by following standard form semantics:
+
+```js
+// During init, in custom mode:
+const labelEl = root.querySelector('.Native')?.id
+  ? document.querySelector(`label[for="${root.querySelector('.Native').id}"]`)
+  : null;
+
+if (labelEl) {
+  if (!labelEl.id) labelEl.id = `datefield-label-${this.instanceId}`;
+  segments.setAttribute('aria-labelledby', labelEl.id);
+}
+```
+
+If no associated `<label>` is found, JS falls back to `data-label-field` on the root. If neither exists, the `.Segments` group has no label — which is an authoring error, not a component error.
 
 ### 2.5 Data-attribute contract — segment elements
 
@@ -112,29 +160,23 @@ this.instanceId = DateField.instanceCount;
 
 ## 3. HTML Structure
 
+The field label is provided by a standard `<label>` element — the same way any native form control is labeled. No translation strings appear in markup.
+
 ```html
+<!-- Label is external — JS connects it to .Segments via aria-labelledby -->
+<label for="birthdate">Födelsedatum</label>
+
 <div
   class="DateField"
   data-component="DateField"
   data-locale="sv-SE"
   data-min="1900-01-01"
   data-max="2100-12-31"
-  data-label-field="Födelsedatum"
-  data-label-day="Dag"
-  data-label-month="Månad"
-  data-label-year="År"
-  data-label-open-calendar="Öppna kalender"
-  data-label-close-calendar="Stäng kalender"
-  data-label-prev-month="Föregående månad"
-  data-label-next-month="Nästa månad"
-  data-label-today="idag"
-  data-label-selected="valt"
-  data-label-disabled="ej tillgängligt"
-  data-label-announce="Valt datum:"
 >
   <!-- Source of truth — always in DOM, posts with form -->
   <input
     class="Native"
+    id="birthdate"
     type="date"
     name="birthdate"
     min="1900-01-01"
@@ -225,13 +267,13 @@ this.instanceId = DateField.instanceCount;
         <!-- e.g. id="datefield-calendar-1" aria-labelledby="datefield-month-1" -->
 
         <div class="CalendarHeader">
-          <!-- aria-label set by JS from data-label-prev-month -->
+          <!-- aria-label set by JS from translations.prevMonth -->
           <button type="button">&#8249;</button>
 
           <!-- id set by JS using instance counter, e.g. id="datefield-month-1" -->
           <span aria-live="polite" aria-atomic="true">Mars 2026</span>
 
-          <!-- aria-label set by JS from data-label-next-month -->
+          <!-- aria-label set by JS from translations.nextMonth -->
           <button type="button">&#8250;</button>
         </div>
 
@@ -300,7 +342,7 @@ this.instanceId = DateField.instanceCount;
 **Key structural rules:**
 
 - `aria-hidden="true"` on `.Custom` is removed by JS during initialization — CSS never touches it
-- `.Segments` receives `aria-label` from JS (reading `data-label-field`) — no `aria-labelledby`, no external element dependency
+- `.Segments` receives `aria-labelledby` pointing to the associated `<label>` element (connected by JS during init); falls back to `aria-label` from `data-label-field` on root if no `<label for>` is found
 - No `aria-controls` on trigger — the calendar only exists in DOM when open; a stale `aria-controls` reference to a non-existent ID is an ARIA error that axe-core will flag
 - `.Announce` is visually hidden via CSS clip pattern and stays inside `.DateField` root always — it never teleports
 - Calendar is a `<template>` element; JS clones it to `<body>` on open and removes it on close — `aria-modal` works correctly in VoiceOver/Safari only when the dialog is a body child
@@ -527,6 +569,14 @@ Follows the same attach and cleanup pattern as `CoverCompositionVideo`:
 ```js
 class DateField {
   static instanceCount = 0;
+  static translations = { en: { /* built-in English strings */ } };
+
+  static registerLocale(locale, strings) {
+    /* Merge strings into DateField.translations[locale].
+       Overwrites existing entry if locale already registered.
+       Must be called before DateField.attach(). */
+  }
+
   static attach(parent = document) { /* scan and instantiate */ }
   constructor(el) { /* init */ }
   destroy() {
@@ -546,9 +596,10 @@ class DateField {
 3. Increment `DateField.instanceCount`, store as `this.instanceId`
 4. If `custom`:
    - Remove `aria-hidden` from `.Custom` (JS owns this, CSS never touches it)
-   - Set `aria-label` on `.Segments` from `data-label-field`
-   - Cache label strings from `data-*` attributes with English fallbacks
-   - Set up segment interaction
+   - Resolve locale: `data-locale` → `document.documentElement.lang` → `"en"`
+   - Load translation strings: `DateField.translations[locale]` → fall back to `"en"`
+   - Connect field label: find `label[for="${nativeInput.id}"]`, set `aria-labelledby` on `.Segments`. Fall back to `aria-label` from `data-label-field` on root if no `<label>` found. (`data-label-field` is instance-specific and is the only `data-label-*` that remains in markup — it is not a generic UI string.)
+   - Set up segment interaction (ARIA attrs, keyboard handlers)
    - Set up calendar lifecycle (template cloning, teleport, positioning, outside-click)
    - Set up value sync listeners
    - Store instance reference: `this.root.__dateFieldInstance = this`
@@ -609,13 +660,13 @@ JS locates the calendar template via `root.querySelector('[data-template="datefi
 3. Append calendar to `<body>`
 4. Position calendar relative to trigger: `triggerRect = trigger.getBoundingClientRect()`
 5. Set `data-state="open"` on root
-6. Update trigger: `aria-expanded="true"`, `aria-label` → `data-label-close-calendar`
+6. Update trigger: `aria-expanded="true"`, `aria-label` → `translations.closeCalendar`
 7. Move focus to: selected date button → today button → first non-disabled day button
 
 **Closing (Escape, outside click, or date selected):**
 1. Remove calendar clone from `<body>`
 2. Set `data-state="idle"` on root
-3. Update trigger: `aria-expanded="false"`, `aria-label` → `data-label-open-calendar`
+3. Update trigger: `aria-expanded="false"`, `aria-label` → `translations.openCalendar`
 4. Return focus to trigger button
 
 **Outside-click detection:**
@@ -700,9 +751,9 @@ Clicking or activating a day with `data-outside-month` navigates the calendar to
 Full label built by concatenating applicable suffixes in this fixed order:
 
 1. Full date string: `"24 mars 2026"`
-2. If today: `, idag` (from `data-label-today`)
-3. If selected: `, valt` (from `data-label-selected`)
-4. If disabled: `, ej tillgängligt` (from `data-label-disabled`)
+2. If today: `, idag` (from `translations.today`)
+3. If selected: `, valt` (from `translations.selected`)
+4. If disabled: `, ej tillgängligt` (from `translations.notAvailable`)
 
 Outside-month days have no special label suffix — their date string already places them in a different month. A day that is today + selected → `"24 mars 2026, idag, valt"`.
 
@@ -756,7 +807,7 @@ Correct SR support is achieved through:
 - [ ] Focus order follows DOM order — `tabindex > 0` is never used
 - [ ] Focus is always visible via `:focus-visible` outline
 - [ ] Focus outline visible against all backgrounds (min 3:1 contrast — WCAG 2.2 2.4.11)
-- [ ] `.Segments` has `aria-label` set by JS from `data-label-field`
+- [ ] `.Segments` has `aria-labelledby` pointing to associated `<label>` element (or `aria-label` from `data-label-field` as fallback)
 - [ ] `aria-label` on every segment reflects current value and role
 - [ ] `aria-valuenow` absent when segment is in placeholder state
 - [ ] `aria-valuemax` on day segment kept in sync with selected month/year
@@ -796,7 +847,8 @@ Correct SR support is achieved through:
 | JS disabled — native input visible | Playwright |
 | `pointer: coarse` — `data-input-mode="native"` set | Playwright |
 | `pointer: fine` — `data-input-mode="custom"` set, `aria-hidden` removed from `.Custom` | Playwright |
-| `.Segments` `aria-label` matches `data-label-field` | Playwright |
+| `.Segments` `aria-labelledby` resolves to associated `<label>` text | Playwright |
+| `.Segments` falls back to `data-label-field` when no `<label for>` found | Playwright |
 | Segment placeholder state: `aria-valuenow` absent, `aria-valuetext` = placeholder string | Playwright |
 | Segment filled state: `aria-valuenow` present, `aria-valuetext` = localized string | Playwright |
 | Segment: ArrowUp/Down increments/decrements, wraps at boundary | Playwright |
@@ -856,6 +908,9 @@ Correct SR support is achieved through:
 | getLocale: returns `data-locale` when set | Vitest |
 | getLocale: falls back to `document.documentElement.lang` when `data-locale` absent | Vitest |
 | getLocale: falls back to `"en"` when both absent | Vitest |
+| registerLocale: registered strings are used by component on init | Vitest |
+| registerLocale: falls back to `"en"` when locale has no registered strings | Vitest |
+| registerLocale: overwriting an existing locale uses new strings | Vitest |
 
 ### 7.3 Manual SR test script
 
@@ -884,10 +939,10 @@ This component is a reference implementation in vanilla HTML/CSS/JS. Ports to ot
 
 **React / Vue / Svelte:** Preserve `data-*` attribute names as props. Map lifecycle hooks to `constructor` / `destroy`. Listen to native `change` event on the hidden input for value binding.
 
-**CMS:** Map CMS fields to `data-*` attributes on the root element. Locale and min/max should be set server-side. All `data-label-*` attributes should be populated from the CMS translation layer.
+**CMS:** Map CMS fields to `data-*` attributes on the root element. Locale (`data-locale`) and min/max should be set server-side. Generic UI strings come from `DateField.registerLocale()` — call it once per locale, populated from your CMS translation layer. The only markup-level label is `data-label-field` (instance-specific field name, e.g. "Departure date") — populate it from your CMS content fields.
 
 **Web Component:** Wrap `DateField` class in `connectedCallback` / `disconnectedCallback`. Expose `value` getter/setter that reads/writes the native input.
 
 ---
 
-*Created: 2026-03-25 | Updated: 2026-03-25 (v1.3 — third spec review pass)*
+*Created: 2026-03-25 | Updated: 2026-03-25 (v1.4 — i18n contract: data-label-* replaced with registerLocale API)*
