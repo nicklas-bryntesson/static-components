@@ -1,4 +1,4 @@
-import { describe, it, expect } from 'vitest'
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
 import {
   getDaysInMonth,
   getFirstWeekdayOfMonth,
@@ -486,6 +486,126 @@ describe('DateField — locale-derived segment order', () => {
     const segs = [...el.querySelectorAll('[data-segment]')]
     expect(segs[0].getAttribute('tabindex')).toBe('0')
     segs.slice(1).forEach(seg => expect(seg.getAttribute('tabindex')).toBe('-1'))
+    el.remove()
+  })
+})
+
+// ─── Display mode helpers ──────────────────────────────────────────────────
+
+function makeDisplayField({ value = '', min = '', max = '', locale = 'sv-SE', disabled = false } = {}) {
+  vi.stubGlobal('matchMedia', (query) => ({
+    matches: query === '(pointer: coarse)',
+    media: query,
+    addListener: () => {},
+    removeListener: () => {},
+  }))
+  const result = makeField({ value, min, max, locale, disabled })
+  vi.unstubAllGlobals()
+  return result
+}
+
+describe('DateField — display mode (pointer: coarse)', () => {
+  it('sets data-input-mode to "display"', () => {
+    const { el } = makeDisplayField()
+    expect(el.dataset.inputMode).toBe('display')
+    el.remove()
+  })
+
+  it('keeps aria-hidden="true" on .Custom — it is a decorative display layer', () => {
+    const { el } = makeDisplayField()
+    expect(el.querySelector('.Custom').getAttribute('aria-hidden')).toBe('true')
+    el.remove()
+  })
+
+  it('generates segment elements in the DOM', () => {
+    const { el } = makeDisplayField()
+    expect(el.querySelectorAll('[data-segment]')).toHaveLength(3)
+    el.remove()
+  })
+
+  it('all segments have tabindex="-1" — not focusable', () => {
+    const { el } = makeDisplayField()
+    el.querySelectorAll('[data-segment]').forEach(seg => {
+      expect(seg.getAttribute('tabindex')).toBe('-1')
+    })
+    el.remove()
+  })
+
+  it('syncs initial native value to segments on mount', () => {
+    const { el } = makeDisplayField({ value: '1990-06-15' })
+    expect(el.querySelector('[data-segment="day"]').getAttribute('aria-valuenow')).toBe('15')
+    expect(el.querySelector('[data-segment="month"]').getAttribute('aria-valuenow')).toBe('6')
+    expect(el.querySelector('[data-segment="year"]').getAttribute('aria-valuenow')).toBe('1990')
+    el.remove()
+  })
+
+  it('leaves segments as placeholders when no initial value', () => {
+    const { el } = makeDisplayField()
+    el.querySelectorAll('[data-segment]').forEach(seg => {
+      expect(seg.hasAttribute('data-placeholder')).toBe(true)
+    })
+    el.remove()
+  })
+
+  it('updates segments when native value changes externally', () => {
+    const { el } = makeDisplayField()
+    const native = el.querySelector('.Native')
+    native.value = '2026-12-31'
+    native.dispatchEvent(new Event('change', { bubbles: true }))
+    expect(el.querySelector('[data-segment="day"]').getAttribute('aria-valuenow')).toBe('31')
+    expect(el.querySelector('[data-segment="month"]').getAttribute('aria-valuenow')).toBe('12')
+    expect(el.querySelector('[data-segment="year"]').getAttribute('aria-valuenow')).toBe('2026')
+    el.remove()
+  })
+
+  it('clears segments on form reset', () => {
+    const form = document.createElement('form')
+    document.body.appendChild(form)
+
+    vi.stubGlobal('matchMedia', (query) => ({
+      matches: query === '(pointer: coarse)',
+      media: query,
+      addListener: () => {},
+      removeListener: () => {},
+    }))
+    const inputId = `df-reset-test-${Math.random().toString(36).slice(2)}`
+    const el = document.createElement('div')
+    el.dataset.component = 'DateField'
+    el.dataset.locale = 'sv-SE'
+    el.innerHTML = `
+      <input class="Native" id="${inputId}" type="date" value="2026-03-26" />
+      <div class="Custom" aria-hidden="true">
+        <div class="Segments" role="group">
+          <button class="Trigger" type="button"></button>
+        </div>
+        <template data-template="datefield-calendar"></template>
+      </div>
+      <div class="Announce" aria-live="polite" aria-atomic="true"></div>
+    `
+    form.appendChild(el)
+    new DateField(el)
+    vi.unstubAllGlobals()
+
+    form.reset()
+
+    el.querySelectorAll('[data-segment]').forEach(seg => {
+      expect(seg.hasAttribute('data-placeholder')).toBe(true)
+    })
+    form.remove()
+  })
+
+  it('keyboard events on segments do nothing — no handlers bound', () => {
+    const { el } = makeDisplayField({ value: '2026-01-15' })
+    const daySeg = el.querySelector('[data-segment="day"]')
+    daySeg.dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowUp', bubbles: true }))
+    // Value should remain 15 — ArrowUp must not increment
+    expect(daySeg.getAttribute('aria-valuenow')).toBe('15')
+    el.remove()
+  })
+
+  it('sets data-disabled on root when native input is disabled', () => {
+    const { el } = makeDisplayField({ disabled: true })
+    expect(el.hasAttribute('data-disabled')).toBe(true)
     el.remove()
   })
 })
