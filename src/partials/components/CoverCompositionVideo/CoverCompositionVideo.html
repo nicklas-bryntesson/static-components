@@ -1,0 +1,78 @@
+<section class="CoverCompositionExample grid-container-full my-16">
+  <div class="grid-container mb-16">
+    <h2>Cover Composition Example</h2>
+  </div>
+
+  <!-- COMPONENT START -->
+  <div
+    class="CoverComposition grid-container"
+    data-component="CoverCompositionVideo"
+    data-autoplay="policy"
+    data-play-text="Play video"
+    data-pause-text="Pause video"
+  >
+    <!-- Media -->
+    <figure class="mediaContainer grid-container-full" role="presentation">
+      <noscript>
+        <style>
+          .CoverCompositionVideoEnhancedMedia {
+            display: none !important;
+          }
+        </style>
+        <video
+          controls
+          playsinline
+          preload="metadata"
+          poster="/videos/poster.webp"
+        >
+          <source src="/videos/multicolored-background.mp4" type="video/mp4" />
+        </video>
+      </noscript>
+
+      <video
+        class="CoverCompositionVideoEnhancedMedia"
+        playsinline
+        preload="none"
+        muted
+        loop
+        poster="/videos/poster.webp"
+      >
+        <source src="/videos/multicolored-background.mp4" type="video/mp4" />
+      </video>
+    </figure>
+
+    <!-- Content -->
+    <div class="contentContainer grid-container-main">
+      <div
+        class="flex flex-col xs:col-span-3 md:col-span-6 xl:col-span-8 gap-4"
+      >
+        <h2
+          class="text-black xs:text-white font-bold text-3xl xl:text-5xl 2xl:text-6xl text-pretty"
+        >
+          A longer title that could breakdown to multiple lines
+        </h2>
+        <div
+          class="prose text-stone-500 xs:text-stone-100 text-lg xs:text-xl xl:text-2xl"
+        >
+          <p>
+            A longer preamble that spans multiple sentences and provides more
+            context. This could include additional details about the product,
+            service, or message that the hero section is promoting. It gives
+            users more information to engage with.
+          </p>
+        </div>
+        <div class="flex flex-wrap items-center gap-4">
+          <a
+            class="Button"
+            data-size="md"
+            data-type="primary"
+            data-theme="default"
+          >
+            <span class="buttonText">Link text</span>
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+  <!-- COMPONENT END -->
+</section>

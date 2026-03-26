@@ -1,0 +1,190 @@
+/*
+Cover composition layout states:
+- UNSAFE: stacked, no overlay
+- SAFE: overlay, media covers container
+
+State detection:
+- Viewport MQ (fallback)
+- Container query (canonical)
+*/
+
+.CoverCompositionExample {
+  margin-block-end: 10rem;
+  position: relative;
+
+  & .mediaContainer {
+    position: relative;
+    background-color: var(--color-stone-200);
+  }
+
+  & .coverCompositionVideoControls {
+    position: absolute;
+    inset-block-start: 1rem;
+    inset-inline-end: 1rem;
+    z-index: 3;
+  }
+
+  & .coverCompositionVideoToggle {
+    --_size: 2.75rem;
+
+    display: grid;
+    place-items: center;
+    inline-size: var(--_size);
+    block-size: var(--_size);
+    border-radius: 50%;
+    background: transparent;
+    color: white;
+    cursor: pointer;
+    backdrop-filter: blur(2px);
+
+    &:focus-visible {
+      outline: 2px solid white;
+      outline-offset: 2px;
+    }
+
+    & svg {
+      inline-size: 1.25rem;
+      block-size: 1.25rem;
+    }
+  }
+
+  /* ========== COVER INVARIANTS ========== */
+
+  /* Fallback no matter the browser capabilities */
+  @media (max-width: 21.24999rem) {
+    .CoverComposition {
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+      margin-block-end: var(--block-vertical-distance);
+
+      & .mediaContainer video {
+        display: block;
+        inline-size: 100%;
+        block-size: auto;
+      }
+
+      .contentContainer {
+        margin-inline: var(--content-offset);
+      }
+    }
+  }
+
+  /* ========== VIEWPORT-BASED OVERLAY (FALLBACK) ========== */
+
+  @supports not (container-type: inline-size) {
+    @media (min-width: 21.25rem) {
+      & .CoverComposition {
+        position: relative;
+        display: grid;
+        grid-template-columns: var(--grid-container-columns);
+
+        & .mediaContainer {
+          position: relative;
+          grid-column: 1/-1;
+          grid-row: 1;
+          z-index: 1;
+
+          &::after {
+            position: absolute;
+            inset: 0;
+            block-size: 100%;
+            inline-size: 100%;
+            content: "";
+            background-color: transparent;
+          }
+
+          & video {
+            position: absolute;
+            inset: 0;
+            inline-size: 100%;
+            block-size: 100%;
+            object-fit: cover;
+          }
+        }
+
+        & .contentContainer {
+          position: relative;
+          grid-column: main;
+          grid-row: 1;
+          display: grid;
+          grid-template-columns: var(--grid-layout-columns);
+          column-gap: var(--grid-layout-gap);
+          z-index: 2;
+          padding-block: 30vh;
+
+          & .Button[data-theme="default"] {
+            &[data-type="primary"] {
+              @apply bg-white text-slate-800 border-white;
+
+              &:hover {
+                @apply bg-stone-100 border-stone-100;
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+
+  /* ========== CONTAINER-QUERY UPGRADE ========== */
+
+  @supports (container-type: inline-size) {
+    .CoverComposition {
+      container-type: inline-size;
+    }
+
+    @container (min-width: 21.25rem) {
+      .CoverComposition {
+        position: relative;
+        display: grid;
+        grid-template-columns: var(--grid-container-columns);
+
+        & .mediaContainer {
+          position: relative;
+          grid-column: 1/-1;
+          grid-row: 1;
+          z-index: 1;
+
+          &::after {
+            position: absolute;
+            inset: 0;
+            block-size: 100%;
+            inline-size: 100%;
+            content: "";
+            background-color: transparent;
+          }
+
+          & video {
+            position: absolute;
+            inset: 0;
+            inline-size: 100%;
+            block-size: 100%;
+            object-fit: cover;
+          }
+        }
+
+        & .contentContainer {
+          position: relative;
+          grid-column: main;
+          grid-row: 1;
+          display: grid;
+          grid-template-columns: var(--grid-layout-columns);
+          column-gap: var(--grid-layout-gap);
+          z-index: 2;
+          padding-block: 30dvh;
+
+          & .Button[data-theme="default"] {
+            &[data-type="primary"] {
+              @apply bg-white text-slate-800 border-white;
+
+              &:hover {
+                @apply bg-stone-100 border-stone-100;
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

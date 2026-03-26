@@ -22,6 +22,8 @@
 
 @import "./../../partials/components/DateField/DateField.css";
 
+@import "./../../partials/sections/input/custom-date.css";
+
 .ExampleTeaserList {
   --_TeaserMaxWidth: 22rem;
   --_GridColumns: repeat(

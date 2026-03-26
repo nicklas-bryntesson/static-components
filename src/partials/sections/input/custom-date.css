@@ -1,0 +1,25 @@
+.custom-date-field-kitchensink {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+
+
+    .comparison-row {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 1rem;
+        margin-block-end: 2rem;
+    }
+
+    .comparison-col {
+        > label {
+            display: block;
+        }
+
+        > input {
+            border: 1px solid;
+            border-radius: 4px;
+            padding: 0.25rem 0.5rem;
+        }
+    }
+}
