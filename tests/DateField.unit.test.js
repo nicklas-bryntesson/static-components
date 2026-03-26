@@ -201,3 +201,84 @@ describe('registerLocale fallback', () => {
     el.remove()
   })
 })
+
+// ─── Shared fixture helper ────────────────────────────────────────────────────
+function makeField({ disabled = false, value = '', min = '', max = '', locale = 'sv-SE', id } = {}) {
+  const inputId = id ?? `df-test-${Math.random().toString(36).slice(2)}`
+  const el = document.createElement('div')
+  el.dataset.component = 'DateField'
+  el.dataset.locale = locale
+  if (min) { el.dataset.min = min }
+  if (max) { el.dataset.max = max }
+  el.innerHTML = `
+    <input class="Native" id="${inputId}" type="date"
+      ${value    ? `value="${value}"`  : ''}
+      ${min      ? `min="${min}"`      : ''}
+      ${max      ? `max="${max}"`      : ''}
+      ${disabled ? 'disabled'          : ''}
+    />
+    <label for="${inputId}">Test label</label>
+    <div class="Custom" aria-hidden="true">
+      <div class="Segments" role="group">
+        <span class="Segment" role="spinbutton" aria-label="Dag"
+          aria-valuemin="1" aria-valuemax="31" aria-valuetext="dd"
+          tabindex="0" data-segment="day" data-placeholder>dd</span>
+        <span class="Separator" aria-hidden="true">/</span>
+        <span class="Segment" role="spinbutton" aria-label="Månad"
+          aria-valuemin="1" aria-valuemax="12" aria-valuetext="mm"
+          tabindex="-1" data-segment="month" data-placeholder>mm</span>
+        <span class="Separator" aria-hidden="true">/</span>
+        <span class="Segment" role="spinbutton" aria-label="År"
+          aria-valuemin="1900" aria-valuemax="2100" aria-valuetext="yyyy"
+          tabindex="-1" data-segment="year" data-placeholder>yyyy</span>
+        <button class="Trigger" type="button" aria-label="Öppna kalender"
+          aria-expanded="false" aria-haspopup="dialog"></button>
+      </div>
+      <template data-template="datefield-calendar">
+        <div class="DateFieldCalendar" role="dialog" aria-modal="true">
+          <div class="CalendarHeader">
+            <button type="button">&#8249;</button>
+            <span aria-live="polite" aria-atomic="true"></span>
+            <button type="button">&#8250;</button>
+          </div>
+          <table class="Grid" role="grid">
+            <thead><tr role="row">
+              <th scope="col"></th><th scope="col"></th><th scope="col"></th>
+              <th scope="col"></th><th scope="col"></th><th scope="col"></th>
+              <th scope="col"></th>
+            </tr></thead>
+            <tbody></tbody>
+          </table>
+        </div>
+      </template>
+    </div>
+    <div class="Announce" aria-live="polite" aria-atomic="true"></div>
+  `
+  document.body.appendChild(el)
+  const instance = new DateField(el)
+  return { el, instance }
+}
+
+describe('DateField — disabled state', () => {
+  it('sets all segments to tabindex="-1" when native is disabled', () => {
+    const { el } = makeField({ disabled: true })
+    el.querySelectorAll('.Segment').forEach(seg => {
+      expect(seg.getAttribute('tabindex')).toBe('-1')
+    })
+    el.remove()
+  })
+
+  it('does not increment a segment when native is disabled', () => {
+    const { el } = makeField({ disabled: true })
+    const daySeg = el.querySelector('[data-segment="day"]')
+    daySeg.dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowUp', bubbles: true }))
+    expect(daySeg.hasAttribute('data-placeholder')).toBe(true)
+    el.remove()
+  })
+
+  it('disables the calendar trigger button when native is disabled', () => {
+    const { el, instance } = makeField({ disabled: true })
+    expect(instance.trigger.disabled).toBe(true)
+    el.remove()
+  })
+})

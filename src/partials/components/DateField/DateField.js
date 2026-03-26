@@ -213,6 +213,10 @@ class DateField {
       seg.addEventListener('focus', focusHandler)
       seg.addEventListener('blur', blurHandler)
     })
+
+    if (this.native.disabled) {
+      this._segmentEls.forEach(seg => seg.setAttribute('tabindex', '-1'))
+    }
   }
 
   _setSegmentFocused(seg) {
@@ -225,6 +229,7 @@ class DateField {
   }
 
   _handleSegmentKey(e, seg) {
+    if (this.native.disabled) return
     switch (e.key) {
       case 'ArrowUp':
         e.preventDefault()
@@ -387,6 +392,10 @@ class DateField {
 
   _bindTrigger() {
     this.trigger.setAttribute('aria-label', this.t.openCalendar)
+    if (this.native.disabled) {
+      this.trigger.disabled = true
+      return
+    }
     this.trigger.addEventListener('click', this._handleTriggerClick)
   }
 
