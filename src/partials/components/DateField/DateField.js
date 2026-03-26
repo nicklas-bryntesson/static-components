@@ -183,6 +183,7 @@ class DateField {
       this.segments.setAttribute('aria-label', this.root.dataset.labelField)
     }
 
+    if (this.native.disabled) this.root.dataset.disabled = ''
     this._initSegments()
     this._bindTrigger()
     if (!this.native.disabled) {
