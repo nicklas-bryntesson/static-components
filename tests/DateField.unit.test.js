@@ -314,3 +314,56 @@ describe('DateField — disabled state', () => {
     el.remove()
   })
 })
+
+describe('DateField — year digit input', () => {
+  it('commits year value after 4 digits are typed', () => {
+    const { el } = makeField()
+    const yearSeg = el.querySelector('[data-segment="year"]')
+    for (const digit of ['2', '0', '2', '6']) {
+      yearSeg.dispatchEvent(new KeyboardEvent('keydown', { key: digit, bubbles: true }))
+    }
+    expect(yearSeg.getAttribute('aria-valuenow')).toBe('2026')
+    expect(yearSeg.hasAttribute('data-placeholder')).toBe(false)
+    el.remove()
+  })
+
+  it('does not commit year after fewer than 4 digits', () => {
+    const { el } = makeField()
+    const yearSeg = el.querySelector('[data-segment="year"]')
+    for (const digit of ['2', '0', '2']) {
+      yearSeg.dispatchEvent(new KeyboardEvent('keydown', { key: digit, bubbles: true }))
+    }
+    expect(yearSeg.hasAttribute('data-placeholder')).toBe(true)
+    el.remove()
+  })
+})
+
+describe('DateField — year limits from data-min/max', () => {
+  it('_getSegmentLimits("year") uses data-min year', () => {
+    const { el, instance } = makeField({ min: '2026-03-26', max: '2027-12-31' })
+    expect(instance._getSegmentLimits('year').min).toBe(2026)
+    el.remove()
+  })
+
+  it('_getSegmentLimits("year") uses data-max year', () => {
+    const { el, instance } = makeField({ min: '2026-03-26', max: '2027-12-31' })
+    expect(instance._getSegmentLimits('year').max).toBe(2027)
+    el.remove()
+  })
+
+  it('ArrowUp on empty year starts at data-min year', () => {
+    const { el } = makeField({ min: '2026-03-26', max: '2027-12-31' })
+    const yearSeg = el.querySelector('[data-segment="year"]')
+    yearSeg.dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowUp', bubbles: true }))
+    expect(yearSeg.getAttribute('aria-valuenow')).toBe('2026')
+    el.remove()
+  })
+
+  it('ArrowUp on empty year defaults to 1900 when no data-min set', () => {
+    const { el } = makeField()
+    const yearSeg = el.querySelector('[data-segment="year"]')
+    yearSeg.dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowUp', bubbles: true }))
+    expect(yearSeg.getAttribute('aria-valuenow')).toBe('1900')
+    el.remove()
+  })
+})

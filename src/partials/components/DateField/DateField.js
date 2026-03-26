@@ -293,7 +293,11 @@ class DateField {
       return { min: 1, max: daysInMonth }
     }
     if (type === 'month') return { min: 1, max: 12 }
-    return { min: 1900, max: 2100 } // year
+    // year — respect data-min / data-max when set
+    return {
+      min: this.min ? this.min.getFullYear() : 1900,
+      max: this.max ? this.max.getFullYear() : 2100,
+    }
   }
 
   _incrementSegment(seg, delta) {
@@ -386,9 +390,11 @@ class DateField {
       }
     } else if (type === 'year') {
       if (this._digitBuffer.length === 4) {
-        const clamped = Math.max(1900, Math.min(2100, num))
+        const limits = this._getSegmentLimits('year')
+        const clamped = Math.max(limits.min, Math.min(limits.max, num))
         this._setSegmentValue(seg, clamped)
         this._digitBuffer = ''
+        this._moveSegmentFocus(seg, 1)
       }
     }
   }
