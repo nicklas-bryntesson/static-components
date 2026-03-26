@@ -165,10 +165,13 @@ class DateField {
       ? window.matchMedia('(pointer: coarse)').matches
       : false
     if (coarse) {
-      this.root.dataset.inputMode = 'native'
+      this._initDisplay()
       return
     }
+    this._initInteractive()
+  }
 
+  _initInteractive() {
     this.root.dataset.inputMode = 'custom'
     this.custom.removeAttribute('aria-hidden')
 
@@ -184,7 +187,8 @@ class DateField {
     }
 
     if (this.native.disabled) this.root.dataset.disabled = ''
-    this._initSegments()
+    this._buildSegments()
+    this._bindSegmentEvents()
     this._bindTrigger()
     if (!this.native.disabled) {
       this._bindValueSync()
@@ -249,7 +253,7 @@ class DateField {
     return span
   }
 
-  _initSegments() {
+  _buildSegments() {
     // Remove any pre-existing segment spans and separators (handles legacy HTML templates)
     this.segments.querySelectorAll('.Segment, .Separator').forEach(el => el.remove())
 
@@ -274,7 +278,13 @@ class DateField {
       this._segmentEls[0].setAttribute('tabindex', '0')
     }
 
-    // Bind event listeners
+    // Disabled: make all segments non-focusable
+    if (this.native.disabled) {
+      this._segmentEls.forEach(seg => seg.setAttribute('tabindex', '-1'))
+    }
+  }
+
+  _bindSegmentEvents() {
     this._segmentEls.forEach(seg => {
       const keydownHandler = e => this._handleSegmentKey(e, seg)
       const focusHandler = () => this._setSegmentFocused(seg)
@@ -284,11 +294,23 @@ class DateField {
       seg.addEventListener('focus', focusHandler)
       seg.addEventListener('blur', blurHandler)
     })
+  }
 
-    // Disabled: make all segments non-focusable
-    if (this.native.disabled) {
-      this._segmentEls.forEach(seg => seg.setAttribute('tabindex', '-1'))
-    }
+  _initDisplay() {
+    this.root.dataset.inputMode = 'display'
+    if (this.native.disabled) this.root.dataset.disabled = ''
+
+    this._buildSegments()
+
+    // Display segments are not interactive — override roving tabindex
+    this._segmentEls.forEach(seg => seg.setAttribute('tabindex', '-1'))
+
+    // Keep segments updated when native value changes (autofill, programmatic)
+    this.native.addEventListener('change', this._handleNativeChange)
+    this.native.form?.addEventListener('reset', this._handleFormReset)
+
+    // Sync initial native value to segment display
+    if (this.native.value) this._syncInitialValue()
   }
 
   _setSegmentFocused(seg) {
