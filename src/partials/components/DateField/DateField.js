@@ -228,12 +228,53 @@ class DateField {
 
   // ─── Segments ───────────────────────────────────────────────────────────────
 
-  _initSegments() {
-    this._segmentEls = [...this.segments.querySelectorAll('[data-segment]')]
+  _createSegmentEl(type) {
+    const span = document.createElement('span')
+    span.className = 'Segment'
+    span.setAttribute('role', 'spinbutton')
+    span.setAttribute('aria-label', this.t[type] || type)
+    span.setAttribute('data-segment', type)
+    span.setAttribute('data-placeholder', '')
+    span.setAttribute('tabindex', '-1') // first segment will be set to 0 after all are inserted
 
+    const limits = this._getSegmentLimits(type)
+    span.setAttribute('aria-valuemin', limits.min)
+    span.setAttribute('aria-valuemax', limits.max)
+
+    const placeholder = type === 'day' ? 'dd' : type === 'month' ? 'mm' : 'yyyy'
+    span.setAttribute('aria-valuetext', placeholder)
+    span.textContent = placeholder
+
+    return span
+  }
+
+  _initSegments() {
+    // Remove any pre-existing segment spans and separators (handles legacy HTML templates)
+    this.segments.querySelectorAll('.Segment, .Separator').forEach(el => el.remove())
+
+    // Determine segment order and separator from locale
+    const { order, separator } = getSegmentOrder(this.locale)
+
+    // Generate and insert segments + separators before the trigger button
+    order.forEach((type, i) => {
+      this.trigger.before(this._createSegmentEl(type))
+      if (i < order.length - 1) {
+        const sep = document.createElement('span')
+        sep.className = 'Separator'
+        sep.setAttribute('aria-hidden', 'true')
+        sep.textContent = separator
+        this.trigger.before(sep)
+      }
+    })
+
+    // Collect generated segment elements and set up roving tabindex
+    this._segmentEls = [...this.segments.querySelectorAll('[data-segment]')]
+    if (this._segmentEls.length > 0) {
+      this._segmentEls[0].setAttribute('tabindex', '0')
+    }
+
+    // Bind event listeners
     this._segmentEls.forEach(seg => {
-      const type = seg.dataset.segment
-      seg.setAttribute('aria-label', this.t[type] || type)
       const keydownHandler = e => this._handleSegmentKey(e, seg)
       const focusHandler = () => this._setSegmentFocused(seg)
       const blurHandler = () => seg.removeAttribute('data-focused')
@@ -243,6 +284,7 @@ class DateField {
       seg.addEventListener('blur', blurHandler)
     })
 
+    // Disabled: make all segments non-focusable
     if (this.native.disabled) {
       this._segmentEls.forEach(seg => seg.setAttribute('tabindex', '-1'))
     }

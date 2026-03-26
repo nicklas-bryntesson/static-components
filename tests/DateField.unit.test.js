@@ -439,3 +439,64 @@ describe('getSegmentOrder', () => {
     expect(separator.length).toBeGreaterThan(0)
   })
 })
+
+describe('DateField — locale-derived segment order', () => {
+  const svSEStrings = {
+    day: 'Dag', month: 'Månad', year: 'År',
+    openCalendar: 'Öppna kalender', closeCalendar: 'Stäng kalender',
+    prevMonth: 'Föregående månad', nextMonth: 'Nästa månad',
+    today: 'idag', selected: 'valt', notAvailable: 'ej tillgängligt',
+    announceSelected: 'Valt datum:',
+  }
+
+  it('sv-SE renders segments in year-month-day DOM order', () => {
+    DateField.registerLocale('sv-SE', svSEStrings)
+    const { el } = makeField({ locale: 'sv-SE' })
+    const segs = [...el.querySelectorAll('[data-segment]')]
+    expect(segs[0].dataset.segment).toBe('year')
+    expect(segs[1].dataset.segment).toBe('month')
+    expect(segs[2].dataset.segment).toBe('day')
+    el.remove()
+  })
+
+  it('sv-SE separators use "-"', () => {
+    DateField.registerLocale('sv-SE', svSEStrings)
+    const { el } = makeField({ locale: 'sv-SE' })
+    const separators = [...el.querySelectorAll('.Separator')]
+    expect(separators).toHaveLength(2)
+    separators.forEach(sep => expect(sep.textContent).toBe('-'))
+    el.remove()
+  })
+
+  it('sv-SE segments have locale aria-labels (Dag, Månad, År)', () => {
+    DateField.registerLocale('sv-SE', svSEStrings)
+    const { el } = makeField({ locale: 'sv-SE' })
+    expect(el.querySelector('[data-segment="day"]').getAttribute('aria-label')).toBe('Dag')
+    expect(el.querySelector('[data-segment="month"]').getAttribute('aria-label')).toBe('Månad')
+    expect(el.querySelector('[data-segment="year"]').getAttribute('aria-label')).toBe('År')
+    el.remove()
+  })
+
+  it('en segments have English aria-labels (Day, Month, Year)', () => {
+    const { el } = makeField({ locale: 'en' })
+    expect(el.querySelector('[data-segment="day"]').getAttribute('aria-label')).toBe('Day')
+    expect(el.querySelector('[data-segment="month"]').getAttribute('aria-label')).toBe('Month')
+    expect(el.querySelector('[data-segment="year"]').getAttribute('aria-label')).toBe('Year')
+    el.remove()
+  })
+
+  it('generates exactly 3 segments and 2 separators', () => {
+    const { el } = makeField({ locale: 'en' })
+    expect(el.querySelectorAll('[data-segment]')).toHaveLength(3)
+    expect(el.querySelectorAll('.Separator')).toHaveLength(2)
+    el.remove()
+  })
+
+  it('first generated segment has tabindex="0", others have "-1"', () => {
+    const { el } = makeField({ locale: 'en' })
+    const segs = [...el.querySelectorAll('[data-segment]')]
+    expect(segs[0].getAttribute('tabindex')).toBe('0')
+    segs.slice(1).forEach(seg => expect(seg.getAttribute('tabindex')).toBe('-1'))
+    el.remove()
+  })
+})
