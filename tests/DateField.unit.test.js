@@ -367,3 +367,45 @@ describe('DateField — year limits from data-min/max', () => {
     el.remove()
   })
 })
+
+describe('DateField — min/max enforcement on segment sync', () => {
+  it('does not write to native input when complete date is before data-min', () => {
+    const { el, instance } = makeField({ min: '2026-03-26', max: '2027-12-31' })
+    const native = el.querySelector('.Native')
+    instance._setSegmentValue(instance._getSegmentEl('day'), 1)
+    instance._setSegmentValue(instance._getSegmentEl('month'), 1)
+    instance._setSegmentValue(instance._getSegmentEl('year'), 2025)
+    expect(native.value).toBe('')
+    el.remove()
+  })
+
+  it('does not write to native input when complete date is after data-max', () => {
+    const { el, instance } = makeField({ min: '2026-03-26', max: '2027-12-31' })
+    const native = el.querySelector('.Native')
+    instance._setSegmentValue(instance._getSegmentEl('day'), 1)
+    instance._setSegmentValue(instance._getSegmentEl('month'), 1)
+    instance._setSegmentValue(instance._getSegmentEl('year'), 2028)
+    expect(native.value).toBe('')
+    el.remove()
+  })
+
+  it('writes to native input when complete date is within data-min/max', () => {
+    const { el, instance } = makeField({ min: '2026-03-26', max: '2027-12-31' })
+    const native = el.querySelector('.Native')
+    instance._setSegmentValue(instance._getSegmentEl('day'), 1)
+    instance._setSegmentValue(instance._getSegmentEl('month'), 4)
+    instance._setSegmentValue(instance._getSegmentEl('year'), 2026)
+    expect(native.value).toBe('2026-04-01')
+    el.remove()
+  })
+
+  it('always writes when no data-min/max set', () => {
+    const { el, instance } = makeField()
+    const native = el.querySelector('.Native')
+    instance._setSegmentValue(instance._getSegmentEl('day'), 1)
+    instance._setSegmentValue(instance._getSegmentEl('month'), 1)
+    instance._setSegmentValue(instance._getSegmentEl('year'), 1900)
+    expect(native.value).toBe('1900-01-01')
+    el.remove()
+  })
+})

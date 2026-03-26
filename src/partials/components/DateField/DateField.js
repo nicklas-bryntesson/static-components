@@ -419,6 +419,15 @@ class DateField {
     const date = new Date(y, m - 1, d)
     if (isNaN(date.getTime())) return
 
+    if (this.min) {
+      const minDay = new Date(this.min.getFullYear(), this.min.getMonth(), this.min.getDate())
+      if (date < minDay) return
+    }
+    if (this.max) {
+      const maxDay = new Date(this.max.getFullYear(), this.max.getMonth(), this.max.getDate())
+      if (date > maxDay) return
+    }
+
     this.selectedDate = date
     this._syncingFromCustom = true
     this.native.value = formatISO(date)
