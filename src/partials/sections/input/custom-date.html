@@ -1,0 +1,272 @@
+<section class="custom-date-field-kitchensink">
+
+  <!-- ─── 1. Default – birthday (sv-SE) ──────────────────────────────── -->
+  <h2>Default — Födelsedatum (sv-SE)</h2>
+  <div class="comparison-row">
+    <div class="comparison-col">
+      <p class="comparison-label">Custom</p>
+      <label for="birthdate">Födelsedatum</label>
+      <div
+        class="DateField"
+        data-component="DateField"
+        data-locale="sv-SE"
+        data-min="1900-01-01"
+        data-max="2100-12-31"
+      >
+        <input class="Native" id="birthdate" type="date" name="birthdate" min="1900-01-01" max="2100-12-31" />
+        <div class="Custom" aria-hidden="true">
+          <div class="Segments" role="group">
+            <button type="button" class="Trigger" aria-label="Öppna kalender"
+              aria-expanded="false" aria-haspopup="dialog">
+              <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="18" height="18"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+            </button>
+          </div>
+          <template data-template="datefield-calendar">
+            <div class="DateFieldCalendar" role="dialog" aria-modal="true">
+              <div class="CalendarHeader">
+                <button type="button">&#8249;</button>
+                <span aria-live="polite" aria-atomic="true"></span>
+                <button type="button">&#8250;</button>
+              </div>
+              <table class="Grid" role="grid">
+                <thead><tr role="row"><th scope="col"></th><th scope="col"></th><th scope="col"></th><th scope="col"></th><th scope="col"></th><th scope="col"></th><th scope="col"></th></tr></thead>
+                <tbody></tbody>
+              </table>
+            </div>
+          </template>
+        </div>
+        <div class="Announce" aria-live="polite" aria-atomic="true"></div>
+      </div>
+    </div>
+    <div class="comparison-col">
+      <p class="comparison-label">Native</p>
+      <label for="native-birthdate">Födelsedatum</label>
+      <input type="date" id="native-birthdate" name="nativeBirthdate" min="1900-01-01" max="2100-12-31" />
+    </div>
+  </div>
+
+  <!-- ─── 2. Required ────────────────────────────────────────────────── -->
+  <h2>Required</h2>
+  <div class="comparison-row">
+    <div class="comparison-col">
+      <p class="comparison-label">Custom</p>
+      <label for="birthdate-required">Födelsedatum <span aria-hidden="true">*</span></label>
+      <div
+        class="DateField"
+        data-component="DateField"
+        data-locale="sv-SE"
+        data-min="1900-01-01"
+        data-max="2100-12-31"
+      >
+        <input class="Native" id="birthdate-required" type="date" name="birthdateRequired" min="1900-01-01" max="2100-12-31" required />
+        <div class="Custom" aria-hidden="true">
+          <div class="Segments" role="group">
+            <button type="button" class="Trigger" aria-label="Öppna kalender"
+              aria-expanded="false" aria-haspopup="dialog">
+              <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="18" height="18"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+            </button>
+          </div>
+          <template data-template="datefield-calendar">
+            <div class="DateFieldCalendar" role="dialog" aria-modal="true">
+              <div class="CalendarHeader">
+                <button type="button">&#8249;</button>
+                <span aria-live="polite" aria-atomic="true"></span>
+                <button type="button">&#8250;</button>
+              </div>
+              <table class="Grid" role="grid">
+                <thead><tr role="row"><th scope="col"></th><th scope="col"></th><th scope="col"></th><th scope="col"></th><th scope="col"></th><th scope="col"></th><th scope="col"></th></tr></thead>
+                <tbody></tbody>
+              </table>
+            </div>
+          </template>
+        </div>
+        <div class="Announce" aria-live="polite" aria-atomic="true"></div>
+      </div>
+    </div>
+    <div class="comparison-col">
+      <p class="comparison-label">Native</p>
+      <label for="native-birthdate-required">Födelsedatum <span aria-hidden="true">*</span></label>
+      <input type="date" id="native-birthdate-required" name="nativeBirthdateRequired" min="1900-01-01" max="2100-12-31" required />
+    </div>
+  </div>
+
+  <!-- ─── 3. Disabled ────────────────────────────────────────────────── -->
+  <h2>Disabled</h2>
+  <div class="comparison-row">
+    <div class="comparison-col">
+      <p class="comparison-label">Custom</p>
+      <label for="birthdate-disabled">Födelsedatum</label>
+      <div
+        class="DateField"
+        data-component="DateField"
+        data-locale="sv-SE"
+        data-min="1900-01-01"
+        data-max="2100-12-31"
+      >
+        <input class="Native" id="birthdate-disabled" type="date" name="birthdateDisabled" min="1900-01-01" max="2100-12-31" value="1990-06-15" disabled />
+        <div class="Custom" aria-hidden="true">
+          <div class="Segments" role="group">
+            <button type="button" class="Trigger" aria-label="Öppna kalender" aria-expanded="false" aria-haspopup="dialog" disabled>
+              <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="18" height="18"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+            </button>
+          </div>
+          <template data-template="datefield-calendar">
+            <div class="DateFieldCalendar" role="dialog" aria-modal="true">
+              <div class="CalendarHeader">
+                <button type="button">&#8249;</button>
+                <span aria-live="polite" aria-atomic="true"></span>
+                <button type="button">&#8250;</button>
+              </div>
+              <table class="Grid" role="grid">
+                <thead><tr role="row"><th scope="col"></th><th scope="col"></th><th scope="col"></th><th scope="col"></th><th scope="col"></th><th scope="col"></th><th scope="col"></th></tr></thead>
+                <tbody></tbody>
+              </table>
+            </div>
+          </template>
+        </div>
+        <div class="Announce" aria-live="polite" aria-atomic="true"></div>
+      </div>
+    </div>
+    <div class="comparison-col">
+      <p class="comparison-label">Native</p>
+      <label for="native-birthdate-disabled">Födelsedatum</label>
+      <input type="date" id="native-birthdate-disabled" name="nativeBirthdateDisabled" value="1990-06-15" disabled />
+    </div>
+  </div>
+
+  <!-- ─── 4. Future dates only – Appointment booking ─────────────────── -->
+  <h2>Future only — Bokningsdatum</h2>
+  <div class="comparison-row">
+    <div class="comparison-col">
+      <p class="comparison-label">Custom</p>
+      <label for="booking-date">Bokningsdatum</label>
+      <div
+        class="DateField"
+        data-component="DateField"
+        data-locale="sv-SE"
+        data-min="2026-03-26"
+        data-max="2027-12-31"
+      >
+        <input class="Native" id="booking-date" type="date" name="bookingDate" min="2026-03-26" max="2027-12-31" />
+        <div class="Custom" aria-hidden="true">
+          <div class="Segments" role="group">
+            <button type="button" class="Trigger" aria-label="Öppna kalender"
+              aria-expanded="false" aria-haspopup="dialog">
+              <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="18" height="18"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+            </button>
+          </div>
+          <template data-template="datefield-calendar">
+            <div class="DateFieldCalendar" role="dialog" aria-modal="true">
+              <div class="CalendarHeader">
+                <button type="button">&#8249;</button>
+                <span aria-live="polite" aria-atomic="true"></span>
+                <button type="button">&#8250;</button>
+              </div>
+              <table class="Grid" role="grid">
+                <thead><tr role="row"><th scope="col"></th><th scope="col"></th><th scope="col"></th><th scope="col"></th><th scope="col"></th><th scope="col"></th><th scope="col"></th></tr></thead>
+                <tbody></tbody>
+              </table>
+            </div>
+          </template>
+        </div>
+        <div class="Announce" aria-live="polite" aria-atomic="true"></div>
+      </div>
+    </div>
+    <div class="comparison-col">
+      <p class="comparison-label">Native</p>
+      <label for="native-booking-date">Bokningsdatum</label>
+      <input type="date" id="native-booking-date" name="nativeBookingDate" min="2026-03-26" max="2027-12-31" />
+    </div>
+  </div>
+
+  <!-- ─── 5. English locale ───────────────────────────────────────────── -->
+  <h2>English locale</h2>
+  <div class="comparison-row">
+    <div class="comparison-col">
+      <p class="comparison-label">Custom</p>
+      <label for="birthdate-en">Date of birth</label>
+      <div
+        class="DateField"
+        data-component="DateField"
+        data-locale="en"
+        data-min="1900-01-01"
+        data-max="2100-12-31"
+      >
+        <input class="Native" id="birthdate-en" type="date" name="birthdateEn" min="1900-01-01" max="2100-12-31" />
+        <div class="Custom" aria-hidden="true">
+          <div class="Segments" role="group">
+            <button type="button" class="Trigger" aria-label="Open calendar"
+              aria-expanded="false" aria-haspopup="dialog">
+              <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="18" height="18"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+            </button>
+          </div>
+          <template data-template="datefield-calendar">
+            <div class="DateFieldCalendar" role="dialog" aria-modal="true">
+              <div class="CalendarHeader">
+                <button type="button">&#8249;</button>
+                <span aria-live="polite" aria-atomic="true"></span>
+                <button type="button">&#8250;</button>
+              </div>
+              <table class="Grid" role="grid">
+                <thead><tr role="row"><th scope="col"></th><th scope="col"></th><th scope="col"></th><th scope="col"></th><th scope="col"></th><th scope="col"></th><th scope="col"></th></tr></thead>
+                <tbody></tbody>
+              </table>
+            </div>
+          </template>
+        </div>
+        <div class="Announce" aria-live="polite" aria-atomic="true"></div>
+      </div>
+    </div>
+    <div class="comparison-col">
+      <p class="comparison-label">Native</p>
+      <label for="native-birthdate-en">Date of birth</label>
+      <input type="date" id="native-birthdate-en" name="nativeBirthdateEn" min="1900-01-01" max="2100-12-31" lang="en" />
+    </div>
+  </div>
+
+  <!-- ─── 6. Pre-filled value ─────────────────────────────────────────── -->
+  <h2>Pre-filled value</h2>
+  <div class="comparison-row">
+    <div class="comparison-col">
+      <p class="comparison-label">Custom</p>
+      <label for="birthdate-prefilled">Födelsedatum</label>
+      <div
+        class="DateField"
+        data-component="DateField"
+        data-locale="sv-SE"
+        data-min="1900-01-01"
+        data-max="2100-12-31"
+      >
+        <input class="Native" id="birthdate-prefilled" type="date" name="birthdatePrefilled" min="1900-01-01" max="2100-12-31" value="1990-06-15" />
+        <div class="Custom" aria-hidden="true">
+          <div class="Segments" role="group">
+            <button type="button" class="Trigger" aria-label="Öppna kalender"
+              aria-expanded="false" aria-haspopup="dialog">
+              <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="18" height="18"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+            </button>
+          </div>
+          <template data-template="datefield-calendar">
+            <div class="DateFieldCalendar" role="dialog" aria-modal="true">
+              <div class="CalendarHeader">
+                <button type="button">&#8249;</button>
+                <span aria-live="polite" aria-atomic="true"></span>
+                <button type="button">&#8250;</button>
+              </div>
+              <table class="Grid" role="grid">
+                <thead><tr role="row"><th scope="col"></th><th scope="col"></th><th scope="col"></th><th scope="col"></th><th scope="col"></th><th scope="col"></th><th scope="col"></th></tr></thead>
+                <tbody></tbody>
+              </table>
+            </div>
+          </template>
+        </div>
+        <div class="Announce" aria-live="polite" aria-atomic="true"></div>
+      </div>
+    </div>
+    <div class="comparison-col">
+      <p class="comparison-label">Native</p>
+      <label for="native-birthdate-prefilled">Födelsedatum</label>
+      <input type="date" id="native-birthdate-prefilled" name="nativeBirthdatePrefilled" min="1900-01-01" max="2100-12-31" value="1990-06-15" />
+    </div>
+  </div>
+
+</section>

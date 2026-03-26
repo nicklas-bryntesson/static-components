@@ -221,17 +221,6 @@ function makeField({ disabled = false, value = '', min = '', max = '', locale = 
     <label for="${inputId}">Test label</label>
     <div class="Custom" aria-hidden="true">
       <div class="Segments" role="group">
-        <span class="Segment" role="spinbutton" aria-label="Dag"
-          aria-valuemin="1" aria-valuemax="31" aria-valuetext="dd"
-          tabindex="0" data-segment="day" data-placeholder>dd</span>
-        <span class="Separator" aria-hidden="true">/</span>
-        <span class="Segment" role="spinbutton" aria-label="Månad"
-          aria-valuemin="1" aria-valuemax="12" aria-valuetext="mm"
-          tabindex="-1" data-segment="month" data-placeholder>mm</span>
-        <span class="Separator" aria-hidden="true">/</span>
-        <span class="Segment" role="spinbutton" aria-label="År"
-          aria-valuemin="1900" aria-valuemax="2100" aria-valuetext="yyyy"
-          tabindex="-1" data-segment="year" data-placeholder>yyyy</span>
         <button class="Trigger" type="button" aria-label="Öppna kalender"
           aria-expanded="false" aria-haspopup="dialog"></button>
       </div>
