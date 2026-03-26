@@ -7,6 +7,7 @@ import {
   formatISO,
   getWeekdayNames,
   getMonthName,
+  getSegmentOrder,
 } from '../src/partials/components/DateField/DateField.js'
 import DateField from '../src/partials/components/DateField/DateField.js'
 
@@ -407,5 +408,34 @@ describe('DateField — min/max enforcement on segment sync', () => {
     instance._setSegmentValue(instance._getSegmentEl('year'), 1900)
     expect(native.value).toBe('1900-01-01')
     el.remove()
+  })
+})
+
+describe('getSegmentOrder', () => {
+  it('returns ["year","month","day"] order for sv-SE', () => {
+    const { order } = getSegmentOrder('sv-SE')
+    expect(order).toEqual(['year', 'month', 'day'])
+  })
+
+  it('returns "-" as separator for sv-SE', () => {
+    const { separator } = getSegmentOrder('sv-SE')
+    expect(separator).toBe('-')
+  })
+
+  it('always returns exactly 3 segment types', () => {
+    expect(getSegmentOrder('en').order).toHaveLength(3)
+    expect(getSegmentOrder('sv-SE').order).toHaveLength(3)
+  })
+
+  it('returns only valid segment type strings', () => {
+    const { order } = getSegmentOrder('sv-SE')
+    const valid = new Set(['day', 'month', 'year'])
+    order.forEach(type => expect(valid.has(type)).toBe(true))
+  })
+
+  it('returns a non-empty string separator', () => {
+    const { separator } = getSegmentOrder('en')
+    expect(typeof separator).toBe('string')
+    expect(separator.length).toBeGreaterThan(0)
   })
 })

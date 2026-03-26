@@ -54,6 +54,32 @@ export function getMonthName(year, month, locale) {
   return new Intl.DateTimeFormat(locale, { month: 'long' }).format(new Date(year, month, 1))
 }
 
+export function getSegmentOrder(locale) {
+  try {
+    const parts = new Intl.DateTimeFormat(locale, {
+      year: 'numeric',
+      month: '2-digit',
+      day: '2-digit',
+    }).formatToParts(new Date(2026, 0, 15))
+
+    const order = []
+    let separator = '/'
+
+    for (const part of parts) {
+      if (part.type === 'day' || part.type === 'month' || part.type === 'year') {
+        order.push(part.type)
+      } else if (part.type === 'literal' && order.length > 0 && order.length < 3) {
+        const trimmed = part.value.trim()
+        if (trimmed) separator = trimmed
+      }
+    }
+
+    if (order.length === 3) return { order, separator }
+  } catch (_) {}
+
+  return { order: ['day', 'month', 'year'], separator: '/' }
+}
+
 // ─── DateField class ──────────────────────────────────────────────────────────
 
 class DateField {
