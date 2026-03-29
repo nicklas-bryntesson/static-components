@@ -8,8 +8,8 @@ import {
   getWeekdayNames,
   getMonthName,
   getSegmentOrder,
-} from '../src/partials/components/DateField/DateField.js'
-import DateField from '../src/partials/components/DateField/DateField.js'
+} from '../src/partials/components/DateField/DateField'
+import DateField from '../src/partials/components/DateField/DateField'
 
 describe('getDaysInMonth', () => {
   it('returns 29 for Feb in leap year 2024', () => {
@@ -111,7 +111,7 @@ describe('DateField.registerLocale', () => {
 
 describe('timezone safety', () => {
   it('new Date(y, m, d) produces correct local date — not UTC-shifted', () => {
-    const d = new Date(2026, 2, 24) // March 24 2026 local midnight
+    const d = new Date(2026, 2, 24)
     expect(d.getFullYear()).toBe(2026)
     expect(d.getMonth()).toBe(2)
     expect(d.getDate()).toBe(24)
@@ -120,7 +120,6 @@ describe('timezone safety', () => {
 
 describe('DateField locale resolution', () => {
   it('falls back to en when resolved locale has no registered translation', () => {
-    // 'fr' is not registered — should fall back to en
     const el = document.createElement('div')
     el.innerHTML = `
       <input class="Native" id="t1" type="date" />
@@ -183,7 +182,6 @@ describe('DateField locale resolution', () => {
 
 describe('registerLocale fallback', () => {
   it('falls back to en strings when locale is not registered', () => {
-    // Confirm that a component using an unregistered locale uses en strings
     const el = document.createElement('div')
     el.innerHTML = `
       <input class="Native" id="t4" type="date" />
@@ -195,16 +193,26 @@ describe('registerLocale fallback', () => {
       <div class="Announce" aria-live="polite" aria-atomic="true"></div>
     `
     el.dataset.component = 'DateField'
-    el.dataset.locale = 'de' // not registered
+    el.dataset.locale = 'de'
     document.body.appendChild(el)
     const instance = new DateField(el)
-    expect(instance.t.openCalendar).toBe('Open calendar') // en value
+    expect(instance.t.openCalendar).toBe('Open calendar')
     el.remove()
   })
 })
 
 // ─── Shared fixture helper ────────────────────────────────────────────────────
-function makeField({ disabled = false, value = '', min = '', max = '', locale = 'sv-SE', id } = {}) {
+
+interface MakeFieldOptions {
+  disabled?: boolean
+  value?: string
+  min?: string
+  max?: string
+  locale?: string
+  id?: string
+}
+
+function makeField({ disabled = false, value = '', min = '', max = '', locale = 'sv-SE', id }: MakeFieldOptions = {}): { el: HTMLElement; instance: DateField } {
   const inputId = id ?? `df-test-${Math.random().toString(36).slice(2)}`
   const el = document.createElement('div')
   el.dataset.component = 'DateField'
@@ -252,31 +260,31 @@ function makeField({ disabled = false, value = '', min = '', max = '', locale = 
 describe('DateField — initial value sync', () => {
   it('populates segments from native value attribute on mount', () => {
     const { el } = makeField({ value: '1990-06-15' })
-    expect(el.querySelector('[data-segment="day"]').getAttribute('aria-valuenow')).toBe('15')
-    expect(el.querySelector('[data-segment="month"]').getAttribute('aria-valuenow')).toBe('6')
-    expect(el.querySelector('[data-segment="year"]').getAttribute('aria-valuenow')).toBe('1990')
+    expect(el.querySelector('[data-segment="day"]')!.getAttribute('aria-valuenow')).toBe('15')
+    expect(el.querySelector('[data-segment="month"]')!.getAttribute('aria-valuenow')).toBe('6')
+    expect(el.querySelector('[data-segment="year"]')!.getAttribute('aria-valuenow')).toBe('1990')
     el.remove()
   })
 
   it('sets selectedDate from native value on mount', () => {
     const { el, instance } = makeField({ value: '1990-06-15' })
     expect(instance.selectedDate).not.toBeNull()
-    expect(instance.selectedDate.getFullYear()).toBe(1990)
-    expect(instance.selectedDate.getMonth()).toBe(5) // June is month index 5
-    expect(instance.selectedDate.getDate()).toBe(15)
+    expect(instance.selectedDate!.getFullYear()).toBe(1990)
+    expect(instance.selectedDate!.getMonth()).toBe(5)
+    expect(instance.selectedDate!.getDate()).toBe(15)
     el.remove()
   })
 
   it('leaves segments as placeholders when no initial value', () => {
     const { el } = makeField()
-    expect(el.querySelector('[data-segment="day"]').hasAttribute('data-placeholder')).toBe(true)
+    expect(el.querySelector('[data-segment="day"]')!.hasAttribute('data-placeholder')).toBe(true)
     el.remove()
   })
 
   it('populates segments from initial value even when field is disabled', () => {
     const { el } = makeField({ disabled: true, value: '1990-06-15' })
-    expect(el.querySelector('[data-segment="day"]').getAttribute('aria-valuenow')).toBe('15')
-    expect(el.querySelector('[data-segment="year"]').getAttribute('aria-valuenow')).toBe('1990')
+    expect(el.querySelector('[data-segment="day"]')!.getAttribute('aria-valuenow')).toBe('15')
+    expect(el.querySelector('[data-segment="year"]')!.getAttribute('aria-valuenow')).toBe('1990')
     el.remove()
   })
 })
@@ -292,7 +300,7 @@ describe('DateField — disabled state', () => {
 
   it('does not increment a segment when native is disabled', () => {
     const { el } = makeField({ disabled: true })
-    const daySeg = el.querySelector('[data-segment="day"]')
+    const daySeg = el.querySelector('[data-segment="day"]')!
     daySeg.dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowUp', bubbles: true }))
     expect(daySeg.hasAttribute('data-placeholder')).toBe(true)
     el.remove()
@@ -308,7 +316,7 @@ describe('DateField — disabled state', () => {
 describe('DateField — year digit input', () => {
   it('commits year value after 4 digits are typed', () => {
     const { el } = makeField()
-    const yearSeg = el.querySelector('[data-segment="year"]')
+    const yearSeg = el.querySelector('[data-segment="year"]')!
     for (const digit of ['2', '0', '2', '6']) {
       yearSeg.dispatchEvent(new KeyboardEvent('keydown', { key: digit, bubbles: true }))
     }
@@ -319,7 +327,7 @@ describe('DateField — year digit input', () => {
 
   it('does not commit year after fewer than 4 digits', () => {
     const { el } = makeField()
-    const yearSeg = el.querySelector('[data-segment="year"]')
+    const yearSeg = el.querySelector('[data-segment="year"]')!
     for (const digit of ['2', '0', '2']) {
       yearSeg.dispatchEvent(new KeyboardEvent('keydown', { key: digit, bubbles: true }))
     }
@@ -343,7 +351,7 @@ describe('DateField — year limits from data-min/max', () => {
 
   it('ArrowUp on empty year starts at data-min year', () => {
     const { el } = makeField({ min: '2026-03-26', max: '2027-12-31' })
-    const yearSeg = el.querySelector('[data-segment="year"]')
+    const yearSeg = el.querySelector('[data-segment="year"]')!
     yearSeg.dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowUp', bubbles: true }))
     expect(yearSeg.getAttribute('aria-valuenow')).toBe('2026')
     el.remove()
@@ -351,7 +359,7 @@ describe('DateField — year limits from data-min/max', () => {
 
   it('ArrowUp on empty year defaults to 1900 when no data-min set', () => {
     const { el } = makeField()
-    const yearSeg = el.querySelector('[data-segment="year"]')
+    const yearSeg = el.querySelector('[data-segment="year"]')!
     yearSeg.dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowUp', bubbles: true }))
     expect(yearSeg.getAttribute('aria-valuenow')).toBe('1900')
     el.remove()
@@ -361,40 +369,40 @@ describe('DateField — year limits from data-min/max', () => {
 describe('DateField — min/max enforcement on segment sync', () => {
   it('does not write to native input when complete date is before data-min', () => {
     const { el, instance } = makeField({ min: '2026-03-26', max: '2027-12-31' })
-    const native = el.querySelector('.Native')
-    instance._setSegmentValue(instance._getSegmentEl('day'), 1)
-    instance._setSegmentValue(instance._getSegmentEl('month'), 1)
-    instance._setSegmentValue(instance._getSegmentEl('year'), 2025)
+    const native = el.querySelector('.Native') as HTMLInputElement
+    instance._setSegmentValue(instance._getSegmentEl('day')!, 1)
+    instance._setSegmentValue(instance._getSegmentEl('month')!, 1)
+    instance._setSegmentValue(instance._getSegmentEl('year')!, 2025)
     expect(native.value).toBe('')
     el.remove()
   })
 
   it('does not write to native input when complete date is after data-max', () => {
     const { el, instance } = makeField({ min: '2026-03-26', max: '2027-12-31' })
-    const native = el.querySelector('.Native')
-    instance._setSegmentValue(instance._getSegmentEl('day'), 1)
-    instance._setSegmentValue(instance._getSegmentEl('month'), 1)
-    instance._setSegmentValue(instance._getSegmentEl('year'), 2028)
+    const native = el.querySelector('.Native') as HTMLInputElement
+    instance._setSegmentValue(instance._getSegmentEl('day')!, 1)
+    instance._setSegmentValue(instance._getSegmentEl('month')!, 1)
+    instance._setSegmentValue(instance._getSegmentEl('year')!, 2028)
     expect(native.value).toBe('')
     el.remove()
   })
 
   it('writes to native input when complete date is within data-min/max', () => {
     const { el, instance } = makeField({ min: '2026-03-26', max: '2027-12-31' })
-    const native = el.querySelector('.Native')
-    instance._setSegmentValue(instance._getSegmentEl('day'), 1)
-    instance._setSegmentValue(instance._getSegmentEl('month'), 4)
-    instance._setSegmentValue(instance._getSegmentEl('year'), 2026)
+    const native = el.querySelector('.Native') as HTMLInputElement
+    instance._setSegmentValue(instance._getSegmentEl('day')!, 1)
+    instance._setSegmentValue(instance._getSegmentEl('month')!, 4)
+    instance._setSegmentValue(instance._getSegmentEl('year')!, 2026)
     expect(native.value).toBe('2026-04-01')
     el.remove()
   })
 
   it('always writes when no data-min/max set', () => {
     const { el, instance } = makeField()
-    const native = el.querySelector('.Native')
-    instance._setSegmentValue(instance._getSegmentEl('day'), 1)
-    instance._setSegmentValue(instance._getSegmentEl('month'), 1)
-    instance._setSegmentValue(instance._getSegmentEl('year'), 1900)
+    const native = el.querySelector('.Native') as HTMLInputElement
+    instance._setSegmentValue(instance._getSegmentEl('day')!, 1)
+    instance._setSegmentValue(instance._getSegmentEl('month')!, 1)
+    instance._setSegmentValue(instance._getSegmentEl('year')!, 1900)
     expect(native.value).toBe('1900-01-01')
     el.remove()
   })
@@ -442,9 +450,9 @@ describe('DateField — locale-derived segment order', () => {
     DateField.registerLocale('sv-SE', svSEStrings)
     const { el } = makeField({ locale: 'sv-SE' })
     const segs = [...el.querySelectorAll('[data-segment]')]
-    expect(segs[0].dataset.segment).toBe('year')
-    expect(segs[1].dataset.segment).toBe('month')
-    expect(segs[2].dataset.segment).toBe('day')
+    expect(segs[0].getAttribute('data-segment')).toBe('year')
+    expect(segs[1].getAttribute('data-segment')).toBe('month')
+    expect(segs[2].getAttribute('data-segment')).toBe('day')
     el.remove()
   })
 
@@ -460,17 +468,17 @@ describe('DateField — locale-derived segment order', () => {
   it('sv-SE segments have locale aria-labels (Dag, Månad, År)', () => {
     DateField.registerLocale('sv-SE', svSEStrings)
     const { el } = makeField({ locale: 'sv-SE' })
-    expect(el.querySelector('[data-segment="day"]').getAttribute('aria-label')).toBe('Dag')
-    expect(el.querySelector('[data-segment="month"]').getAttribute('aria-label')).toBe('Månad')
-    expect(el.querySelector('[data-segment="year"]').getAttribute('aria-label')).toBe('År')
+    expect(el.querySelector('[data-segment="day"]')!.getAttribute('aria-label')).toBe('Dag')
+    expect(el.querySelector('[data-segment="month"]')!.getAttribute('aria-label')).toBe('Månad')
+    expect(el.querySelector('[data-segment="year"]')!.getAttribute('aria-label')).toBe('År')
     el.remove()
   })
 
   it('en segments have English aria-labels (Day, Month, Year)', () => {
     const { el } = makeField({ locale: 'en' })
-    expect(el.querySelector('[data-segment="day"]').getAttribute('aria-label')).toBe('Day')
-    expect(el.querySelector('[data-segment="month"]').getAttribute('aria-label')).toBe('Month')
-    expect(el.querySelector('[data-segment="year"]').getAttribute('aria-label')).toBe('Year')
+    expect(el.querySelector('[data-segment="day"]')!.getAttribute('aria-label')).toBe('Day')
+    expect(el.querySelector('[data-segment="month"]')!.getAttribute('aria-label')).toBe('Month')
+    expect(el.querySelector('[data-segment="year"]')!.getAttribute('aria-label')).toBe('Year')
     el.remove()
   })
 
@@ -492,8 +500,16 @@ describe('DateField — locale-derived segment order', () => {
 
 // ─── Display mode helpers ──────────────────────────────────────────────────
 
-function makeDisplayField({ value = '', min = '', max = '', locale = 'sv-SE', disabled = false } = {}) {
-  vi.stubGlobal('matchMedia', (query) => ({
+interface MakeDisplayFieldOptions {
+  value?: string
+  min?: string
+  max?: string
+  locale?: string
+  disabled?: boolean
+}
+
+function makeDisplayField({ value = '', min = '', max = '', locale = 'sv-SE', disabled = false }: MakeDisplayFieldOptions = {}): { el: HTMLElement; instance: DateField } {
+  vi.stubGlobal('matchMedia', (query: string) => ({
     matches: query === '(pointer: coarse)',
     media: query,
     addListener: () => {},
@@ -513,7 +529,7 @@ describe('DateField — display mode (pointer: coarse)', () => {
 
   it('keeps aria-hidden="true" on .Custom — it is a decorative display layer', () => {
     const { el } = makeDisplayField()
-    expect(el.querySelector('.Custom').getAttribute('aria-hidden')).toBe('true')
+    expect(el.querySelector('.Custom')!.getAttribute('aria-hidden')).toBe('true')
     el.remove()
   })
 
@@ -533,9 +549,9 @@ describe('DateField — display mode (pointer: coarse)', () => {
 
   it('syncs initial native value to segments on mount', () => {
     const { el } = makeDisplayField({ value: '1990-06-15' })
-    expect(el.querySelector('[data-segment="day"]').getAttribute('aria-valuenow')).toBe('15')
-    expect(el.querySelector('[data-segment="month"]').getAttribute('aria-valuenow')).toBe('6')
-    expect(el.querySelector('[data-segment="year"]').getAttribute('aria-valuenow')).toBe('1990')
+    expect(el.querySelector('[data-segment="day"]')!.getAttribute('aria-valuenow')).toBe('15')
+    expect(el.querySelector('[data-segment="month"]')!.getAttribute('aria-valuenow')).toBe('6')
+    expect(el.querySelector('[data-segment="year"]')!.getAttribute('aria-valuenow')).toBe('1990')
     el.remove()
   })
 
@@ -549,12 +565,12 @@ describe('DateField — display mode (pointer: coarse)', () => {
 
   it('updates segments when native value changes externally', () => {
     const { el } = makeDisplayField()
-    const native = el.querySelector('.Native')
+    const native = el.querySelector('.Native') as HTMLInputElement
     native.value = '2026-12-31'
     native.dispatchEvent(new Event('change', { bubbles: true }))
-    expect(el.querySelector('[data-segment="day"]').getAttribute('aria-valuenow')).toBe('31')
-    expect(el.querySelector('[data-segment="month"]').getAttribute('aria-valuenow')).toBe('12')
-    expect(el.querySelector('[data-segment="year"]').getAttribute('aria-valuenow')).toBe('2026')
+    expect(el.querySelector('[data-segment="day"]')!.getAttribute('aria-valuenow')).toBe('31')
+    expect(el.querySelector('[data-segment="month"]')!.getAttribute('aria-valuenow')).toBe('12')
+    expect(el.querySelector('[data-segment="year"]')!.getAttribute('aria-valuenow')).toBe('2026')
     el.remove()
   })
 
@@ -562,7 +578,7 @@ describe('DateField — display mode (pointer: coarse)', () => {
     const form = document.createElement('form')
     document.body.appendChild(form)
 
-    vi.stubGlobal('matchMedia', (query) => ({
+    vi.stubGlobal('matchMedia', (query: string) => ({
       matches: query === '(pointer: coarse)',
       media: query,
       addListener: () => {},
@@ -596,9 +612,8 @@ describe('DateField — display mode (pointer: coarse)', () => {
 
   it('keyboard events on segments do nothing — no handlers bound', () => {
     const { el } = makeDisplayField({ value: '2026-01-15' })
-    const daySeg = el.querySelector('[data-segment="day"]')
+    const daySeg = el.querySelector('[data-segment="day"]')!
     daySeg.dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowUp', bubbles: true }))
-    // Value should remain 15 — ArrowUp must not increment
     expect(daySeg.getAttribute('aria-valuenow')).toBe('15')
     el.remove()
   })
