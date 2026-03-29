@@ -143,6 +143,7 @@ class DateField {
   currentYear: number
   currentMonth: number
   instanceId: number
+  fieldId: string
   locale: string
   t: TranslationStrings
   min: Date | null
@@ -184,6 +185,7 @@ class DateField {
     this.selectedDate = null
     this.currentYear = new Date().getFullYear()
     this.currentMonth = new Date().getMonth()
+    this.fieldId = ''
     this._syncingFromCustom = false
     this._segmentEls = []
     this._digitBuffer = ''
@@ -226,6 +228,13 @@ class DateField {
   }
 
   _init(): void {
+    this.fieldId = this.root.dataset.id ?? `datefield-${this.instanceId}`
+    this.native.id = this.fieldId
+    this.native.name = this.root.dataset.name ?? ''
+    if (this.root.dataset.min) this.native.min = this.root.dataset.min
+    if (this.root.dataset.max) this.native.max = this.root.dataset.max
+    this.announce.id = `${this.fieldId}-announce`
+
     const coarse = (typeof window.matchMedia === 'function')
       ? window.matchMedia('(pointer: coarse)').matches
       : false
@@ -244,7 +253,7 @@ class DateField {
       ? document.querySelector<HTMLLabelElement>(`label[for="${this.native.id}"]`)
       : null
     if (labelEl) {
-      if (!labelEl.id) labelEl.id = `datefield-label-${this.instanceId}`
+      if (!labelEl.id) labelEl.id = `${this.fieldId}-label`
       this.segments.setAttribute('aria-labelledby', labelEl.id)
     } else if (this.root.dataset.labelField) {
       this.segments.setAttribute('aria-label', this.root.dataset.labelField)
@@ -606,8 +615,8 @@ class DateField {
     this.calendarEl = clone.querySelector<HTMLElement>('.DateFieldCalendar')!
 
     const headingSpan = this.calendarEl.querySelector('.CalendarHeader span')
-    const calId = `datefield-calendar-${this.instanceId}`
-    const monthId = `datefield-month-${this.instanceId}`
+    const calId = `${this.fieldId}-calendar`
+    const monthId = `${this.fieldId}-month`
     this.calendarEl.id = calId
     this.calendarEl.setAttribute('aria-labelledby', monthId)
     if (headingSpan) headingSpan.id = monthId

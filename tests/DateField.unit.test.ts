@@ -121,8 +121,11 @@ describe('timezone safety', () => {
 describe('DateField locale resolution', () => {
   it('falls back to en when resolved locale has no registered translation', () => {
     const el = document.createElement('div')
+    el.dataset.component = 'DateField'
+    el.dataset.id = 't1'
+    el.dataset.locale = 'fr'
     el.innerHTML = `
-      <input class="Native" id="t1" type="date" />
+      <input class="Native" type="date" />
       <div class="Custom" aria-hidden="true">
         <div class="Segments" role="group"></div>
         <button class="Trigger" type="button"></button>
@@ -130,8 +133,6 @@ describe('DateField locale resolution', () => {
       </div>
       <div class="Announce" aria-live="polite" aria-atomic="true"></div>
     `
-    el.dataset.component = 'DateField'
-    el.dataset.locale = 'fr'
     document.body.appendChild(el)
     const instance = new DateField(el)
     expect(instance.locale).toBe('en')
@@ -140,8 +141,11 @@ describe('DateField locale resolution', () => {
 
   it('uses data-locale when set and registered', () => {
     const el = document.createElement('div')
+    el.dataset.component = 'DateField'
+    el.dataset.id = 't2'
+    el.dataset.locale = 'sv-SE'
     el.innerHTML = `
-      <input class="Native" id="t2" type="date" />
+      <input class="Native" type="date" />
       <div class="Custom" aria-hidden="true">
         <div class="Segments" role="group"></div>
         <button class="Trigger" type="button"></button>
@@ -149,8 +153,6 @@ describe('DateField locale resolution', () => {
       </div>
       <div class="Announce" aria-live="polite" aria-atomic="true"></div>
     `
-    el.dataset.component = 'DateField'
-    el.dataset.locale = 'sv-SE'
     DateField.registerLocale('sv-SE', { day: 'Dag', month: 'Månad', year: 'År', openCalendar: 'Öppna kalender', closeCalendar: 'Stäng kalender', prevMonth: 'Föregående månad', nextMonth: 'Nästa månad', today: 'idag', selected: 'valt', notAvailable: 'ej tillgängligt', announceSelected: 'Valt datum:' })
     document.body.appendChild(el)
     const instance = new DateField(el)
@@ -162,8 +164,10 @@ describe('DateField locale resolution', () => {
   it('falls back to document.documentElement.lang when data-locale is absent', () => {
     document.documentElement.lang = 'sv-SE'
     const el = document.createElement('div')
+    el.dataset.component = 'DateField'
+    el.dataset.id = 't3'
     el.innerHTML = `
-      <input class="Native" id="t3" type="date" />
+      <input class="Native" type="date" />
       <div class="Custom" aria-hidden="true">
         <div class="Segments" role="group"></div>
         <button class="Trigger" type="button"></button>
@@ -171,7 +175,6 @@ describe('DateField locale resolution', () => {
       </div>
       <div class="Announce" aria-live="polite" aria-atomic="true"></div>
     `
-    el.dataset.component = 'DateField'
     document.body.appendChild(el)
     const instance = new DateField(el)
     expect(instance.locale).toBe('sv-SE')
@@ -183,8 +186,11 @@ describe('DateField locale resolution', () => {
 describe('registerLocale fallback', () => {
   it('falls back to en strings when locale is not registered', () => {
     const el = document.createElement('div')
+    el.dataset.component = 'DateField'
+    el.dataset.id = 't4'
+    el.dataset.locale = 'de'
     el.innerHTML = `
-      <input class="Native" id="t4" type="date" />
+      <input class="Native" type="date" />
       <div class="Custom" aria-hidden="true">
         <div class="Segments" role="group"></div>
         <button class="Trigger" type="button"></button>
@@ -192,8 +198,6 @@ describe('registerLocale fallback', () => {
       </div>
       <div class="Announce" aria-live="polite" aria-atomic="true"></div>
     `
-    el.dataset.component = 'DateField'
-    el.dataset.locale = 'de'
     document.body.appendChild(el)
     const instance = new DateField(el)
     expect(instance.t.openCalendar).toBe('Open calendar')
@@ -210,23 +214,24 @@ interface MakeFieldOptions {
   max?: string
   locale?: string
   id?: string
+  name?: string
 }
 
-function makeField({ disabled = false, value = '', min = '', max = '', locale = 'sv-SE', id }: MakeFieldOptions = {}): { el: HTMLElement; instance: DateField } {
-  const inputId = id ?? `df-test-${Math.random().toString(36).slice(2)}`
+function makeField({ disabled = false, value = '', min = '', max = '', locale = 'sv-SE', id, name = 'testfield' }: MakeFieldOptions = {}): { el: HTMLElement; instance: DateField } {
+  const fieldId = id ?? `df-test-${Math.random().toString(36).slice(2)}`
   const el = document.createElement('div')
   el.dataset.component = 'DateField'
+  el.dataset.id = fieldId
+  el.dataset.name = name
   el.dataset.locale = locale
-  if (min) { el.dataset.min = min }
-  if (max) { el.dataset.max = max }
+  if (min) el.dataset.min = min
+  if (max) el.dataset.max = max
   el.innerHTML = `
-    <input class="Native" id="${inputId}" type="date"
-      ${value    ? `value="${value}"`  : ''}
-      ${min      ? `min="${min}"`      : ''}
-      ${max      ? `max="${max}"`      : ''}
-      ${disabled ? 'disabled'          : ''}
+    <input class="Native" type="date"
+      ${value    ? `value="${value}"` : ''}
+      ${disabled ? 'disabled'         : ''}
     />
-    <label for="${inputId}">Test label</label>
+    <label for="${fieldId}">Test label</label>
     <div class="Custom" aria-hidden="true">
       <div class="Segments" role="group">
         <button class="Trigger" type="button" aria-label="Öppna kalender"
@@ -587,9 +592,10 @@ describe('DateField — display mode (pointer: coarse)', () => {
     const inputId = `df-reset-test-${Math.random().toString(36).slice(2)}`
     const el = document.createElement('div')
     el.dataset.component = 'DateField'
+    el.dataset.id = inputId
     el.dataset.locale = 'sv-SE'
     el.innerHTML = `
-      <input class="Native" id="${inputId}" type="date" value="2026-03-26" />
+      <input class="Native" type="date" value="2026-03-26" />
       <div class="Custom" aria-hidden="true">
         <div class="Segments" role="group">
           <button class="Trigger" type="button"></button>
@@ -621,6 +627,200 @@ describe('DateField — display mode (pointer: coarse)', () => {
   it('sets data-disabled on root when native input is disabled', () => {
     const { el } = makeDisplayField({ disabled: true })
     expect(el.hasAttribute('data-disabled')).toBe(true)
+    el.remove()
+  })
+})
+
+describe('DateField — prop application from wrapper data attributes', () => {
+  it('applies data-id to native input id', () => {
+    const el = document.createElement('div')
+    el.dataset.component = 'DateField'
+    el.dataset.id = 'my-date'
+    el.dataset.name = 'mydate'
+    el.dataset.locale = 'sv-SE'
+    el.innerHTML = `
+      <input class="Native" type="date" />
+      <div class="Custom" aria-hidden="true">
+        <div class="Segments" role="group">
+          <button class="Trigger" type="button" aria-expanded="false" aria-haspopup="dialog"></button>
+        </div>
+        <template data-template="datefield-calendar">
+          <div class="DateFieldCalendar" role="dialog" aria-modal="true">
+            <div class="CalendarHeader">
+              <button type="button">&#8249;</button>
+              <span aria-live="polite" aria-atomic="true"></span>
+              <button type="button">&#8250;</button>
+            </div>
+            <table class="Grid" role="grid">
+              <thead><tr role="row">
+                <th scope="col"></th><th scope="col"></th><th scope="col"></th>
+                <th scope="col"></th><th scope="col"></th><th scope="col"></th>
+                <th scope="col"></th>
+              </tr></thead>
+              <tbody></tbody>
+            </table>
+          </div>
+        </template>
+      </div>
+      <div class="Announce" aria-live="polite" aria-atomic="true"></div>
+    `
+    document.body.appendChild(el)
+    const instance = new DateField(el)
+    expect(instance.native.id).toBe('my-date')
+    el.remove()
+  })
+
+  it('applies data-name to native input name', () => {
+    const el = document.createElement('div')
+    el.dataset.component = 'DateField'
+    el.dataset.id = 'my-date'
+    el.dataset.name = 'mydate'
+    el.dataset.locale = 'sv-SE'
+    el.innerHTML = `
+      <input class="Native" type="date" />
+      <div class="Custom" aria-hidden="true">
+        <div class="Segments" role="group">
+          <button class="Trigger" type="button" aria-expanded="false" aria-haspopup="dialog"></button>
+        </div>
+        <template data-template="datefield-calendar">
+          <div class="DateFieldCalendar" role="dialog" aria-modal="true">
+            <div class="CalendarHeader">
+              <button type="button">&#8249;</button>
+              <span aria-live="polite" aria-atomic="true"></span>
+              <button type="button">&#8250;</button>
+            </div>
+            <table class="Grid" role="grid">
+              <thead><tr role="row">
+                <th scope="col"></th><th scope="col"></th><th scope="col"></th>
+                <th scope="col"></th><th scope="col"></th><th scope="col"></th>
+                <th scope="col"></th>
+              </tr></thead>
+              <tbody></tbody>
+            </table>
+          </div>
+        </template>
+      </div>
+      <div class="Announce" aria-live="polite" aria-atomic="true"></div>
+    `
+    document.body.appendChild(el)
+    const instance = new DateField(el)
+    expect(instance.native.name).toBe('mydate')
+    el.remove()
+  })
+
+  it('applies data-min and data-max to native input', () => {
+    const el = document.createElement('div')
+    el.dataset.component = 'DateField'
+    el.dataset.id = 'my-date'
+    el.dataset.name = 'mydate'
+    el.dataset.min = '2000-01-01'
+    el.dataset.max = '2099-12-31'
+    el.dataset.locale = 'sv-SE'
+    el.innerHTML = `
+      <input class="Native" type="date" />
+      <div class="Custom" aria-hidden="true">
+        <div class="Segments" role="group">
+          <button class="Trigger" type="button" aria-expanded="false" aria-haspopup="dialog"></button>
+        </div>
+        <template data-template="datefield-calendar">
+          <div class="DateFieldCalendar" role="dialog" aria-modal="true">
+            <div class="CalendarHeader">
+              <button type="button">&#8249;</button>
+              <span aria-live="polite" aria-atomic="true"></span>
+              <button type="button">&#8250;</button>
+            </div>
+            <table class="Grid" role="grid">
+              <thead><tr role="row">
+                <th scope="col"></th><th scope="col"></th><th scope="col"></th>
+                <th scope="col"></th><th scope="col"></th><th scope="col"></th>
+                <th scope="col"></th>
+              </tr></thead>
+              <tbody></tbody>
+            </table>
+          </div>
+        </template>
+      </div>
+      <div class="Announce" aria-live="polite" aria-atomic="true"></div>
+    `
+    document.body.appendChild(el)
+    const instance = new DateField(el)
+    expect(instance.native.min).toBe('2000-01-01')
+    expect(instance.native.max).toBe('2099-12-31')
+    el.remove()
+  })
+
+  it('falls back to datefield-{instanceId} when data-id is absent', () => {
+    const el = document.createElement('div')
+    el.dataset.component = 'DateField'
+    el.dataset.name = 'mydate'
+    el.dataset.locale = 'sv-SE'
+    el.innerHTML = `
+      <input class="Native" type="date" />
+      <div class="Custom" aria-hidden="true">
+        <div class="Segments" role="group">
+          <button class="Trigger" type="button" aria-expanded="false" aria-haspopup="dialog"></button>
+        </div>
+        <template data-template="datefield-calendar">
+          <div class="DateFieldCalendar" role="dialog" aria-modal="true">
+            <div class="CalendarHeader">
+              <button type="button">&#8249;</button>
+              <span aria-live="polite" aria-atomic="true"></span>
+              <button type="button">&#8250;</button>
+            </div>
+            <table class="Grid" role="grid">
+              <thead><tr role="row">
+                <th scope="col"></th><th scope="col"></th><th scope="col"></th>
+                <th scope="col"></th><th scope="col"></th><th scope="col"></th>
+                <th scope="col"></th>
+              </tr></thead>
+              <tbody></tbody>
+            </table>
+          </div>
+        </template>
+      </div>
+      <div class="Announce" aria-live="polite" aria-atomic="true"></div>
+    `
+    document.body.appendChild(el)
+    const instance = new DateField(el)
+    expect(instance.native.id).toMatch(/^datefield-\d+$/)
+    el.remove()
+  })
+
+  it('stores fieldId on instance', () => {
+    const el = document.createElement('div')
+    el.dataset.component = 'DateField'
+    el.dataset.id = 'my-date'
+    el.dataset.name = 'mydate'
+    el.dataset.locale = 'sv-SE'
+    el.innerHTML = `
+      <input class="Native" type="date" />
+      <div class="Custom" aria-hidden="true">
+        <div class="Segments" role="group">
+          <button class="Trigger" type="button" aria-expanded="false" aria-haspopup="dialog"></button>
+        </div>
+        <template data-template="datefield-calendar">
+          <div class="DateFieldCalendar" role="dialog" aria-modal="true">
+            <div class="CalendarHeader">
+              <button type="button">&#8249;</button>
+              <span aria-live="polite" aria-atomic="true"></span>
+              <button type="button">&#8250;</button>
+            </div>
+            <table class="Grid" role="grid">
+              <thead><tr role="row">
+                <th scope="col"></th><th scope="col"></th><th scope="col"></th>
+                <th scope="col"></th><th scope="col"></th><th scope="col"></th>
+                <th scope="col"></th>
+              </tr></thead>
+              <tbody></tbody>
+            </table>
+          </div>
+        </template>
+      </div>
+      <div class="Announce" aria-live="polite" aria-atomic="true"></div>
+    `
+    document.body.appendChild(el)
+    const instance = new DateField(el)
+    expect(instance.fieldId).toBe('my-date')
     el.remove()
   })
 })
