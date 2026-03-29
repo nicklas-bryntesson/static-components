@@ -16,6 +16,7 @@ interface TranslationStrings {
   selected: string
   notAvailable: string
   announceSelected: string
+  dateField: string
 }
 
 interface SegmentHandlers {
@@ -123,7 +124,7 @@ class DateField {
       openCalendar: 'Open calendar', closeCalendar: 'Close calendar',
       prevMonth: 'Previous month', nextMonth: 'Next month',
       today: 'today', selected: 'selected', notAvailable: 'not available',
-      announceSelected: 'Selected date:',
+      announceSelected: 'Selected date:', dateField: 'date field',
     }
   }
 
@@ -248,6 +249,7 @@ class DateField {
     } else if (this.root.dataset.labelField) {
       this.segments.setAttribute('aria-label', this.root.dataset.labelField)
     }
+    this.segments.setAttribute('aria-roledescription', this.t.dateField)
 
     if (this.native.disabled) this.root.dataset.disabled = ''
     this._buildSegments()
