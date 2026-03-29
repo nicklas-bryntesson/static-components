@@ -361,6 +361,7 @@ class DateField {
   }
 
   _setSegmentFocused(seg: HTMLSpanElement): void {
+    if (this.calendarEl) this._closeCalendar(false)
     this._segmentEls.forEach(s => {
       s.removeAttribute('data-focused')
       s.setAttribute('tabindex', '-1')
@@ -649,7 +650,7 @@ class DateField {
     this._moveFocusIntoCalendar()
   }
 
-  _closeCalendar(): void {
+  _closeCalendar(refocusTrigger = true): void {
     if (!this.calendarEl) return
     this.calendarEl.remove()
     this.calendarEl = null
@@ -659,7 +660,7 @@ class DateField {
     this.root.dataset.state = 'idle'
     this.trigger.setAttribute('aria-expanded', 'false')
     this.trigger.setAttribute('aria-label', this.t.openCalendar)
-    this.trigger.focus()
+    if (refocusTrigger) this.trigger.focus()
   }
 
   _navigateMonth(direction: number): void {
