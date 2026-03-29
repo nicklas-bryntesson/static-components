@@ -1,6 +1,0 @@
-@import "tailwindcss";
-
-@theme {
-  --site-padding: var(--SITE--PADDING);
-  --site-max-width: var(--SITE--MAX--WIDTH);
-}

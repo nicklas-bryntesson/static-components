@@ -1,8 +1,0 @@
-.stack-grid {
-  display: grid;
-  grid: [stack] 100% / [stack] 100%;
-}
-
-.stack-item {
-  grid-area: stack;
-}
