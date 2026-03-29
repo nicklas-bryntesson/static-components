@@ -1,5 +1,5 @@
 import CoverCompositionVideo from "../partials/components/CoverCompositionVideo/CoverCompositionVideo.js";
-import DateField from "../partials/components/DateField/DateField.js";
+import DateField from "../partials/components/DateField/DateField";
 import svSE from "../partials/components/DateField/locales/sv-SE.json"; // Vite handles JSON imports natively
 
 function load(entry) {
