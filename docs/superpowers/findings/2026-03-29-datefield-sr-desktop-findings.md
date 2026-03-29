@@ -79,6 +79,24 @@ Native announces `"År År"`, `"Månad Månad"` (browser quirk duplicating the n
 
 `StaticText "Valt datum: 1 januari 1900"` sits outside the group in the AT. An SR user navigating the page will encounter this text with no surrounding context telling them which field it belongs to. On a form with multiple date fields this becomes ambiguous.
 
+**Candidate solution: `aria-describedby` on the segments group**
+
+The infrastructure is already in place — the previous task added `this.announce.id = \`${this.fieldId}-announce\``. The fix would be one line in `_initInteractive()`:
+
+```ts
+this.segments.setAttribute('aria-describedby', `${this.fieldId}-announce`)
+```
+
+Behaviour:
+- **Before any date is selected:** announce region is empty → `aria-describedby` on an empty element produces no description. Silent. ✓
+- **After a date is selected:** re-entering the field reads *"Födelsedatum, date field — Valt datum: 1 januari 1900"* — current value surfaced as context on re-entry. ✓
+- **On value change:** `aria-live` fires immediately as before. `aria-describedby` is a separate trigger (on focus), not a duplicate. ✓
+
+**Tradeoffs:**
+- Pre-filled fields will read the full "Valt datum: X" description every time the user enters the field — could feel verbose.
+- Some SR variation in how `aria-live` + `aria-describedby` on the same element behaves across NVDA / JAWS / VoiceOver — needs testing.
+- Low implementation risk: one attribute set, no logic change, already has the ID scaffolding.
+
 ---
 
 ## Open Questions for Planning
@@ -86,4 +104,4 @@ Native announces `"År År"`, `"Månad Månad"` (browser quirk duplicating the n
 - Fix gap #1 via **Tab-between-segments** (3 Tab stops, matches native) or **instructions** (aria-description) or both?
 - Does digit entry auto-advance to next segment? (Not verified — check `_handleDigit` in DateField.ts)
 - Should separators be exposed to AT? Does it help or add noise?
-- Should the announce region be associated more tightly to the field (e.g. `aria-describedby` from root to announce element)?
+- Gap #6 candidate solution (see above) needs cross-SR testing before committing — does `aria-live` + `aria-describedby` on the same element behave consistently across NVDA / JAWS / VoiceOver on Mac?
