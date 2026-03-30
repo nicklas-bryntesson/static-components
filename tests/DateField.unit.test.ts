@@ -824,3 +824,124 @@ describe('DateField — prop application from wrapper data attributes', () => {
     el.remove()
   })
 })
+
+describe('DateField — segment digit clamping', () => {
+  it('day: typing "3" then "4" clamps to 31 (max days when no month set)', () => {
+    const { el } = makeField()
+    const daySeg = el.querySelector('[data-segment="day"]')! as HTMLElement
+    daySeg.dispatchEvent(new KeyboardEvent('keydown', { key: '3', bubbles: true }))
+    daySeg.dispatchEvent(new KeyboardEvent('keydown', { key: '4', bubbles: true }))
+    expect(daySeg.getAttribute('aria-valuenow')).toBe('31')
+    el.remove()
+  })
+
+  it('month: typing "1" then "3" clamps to 12', () => {
+    const { el } = makeField()
+    const monthSeg = el.querySelector('[data-segment="month"]')! as HTMLElement
+    monthSeg.dispatchEvent(new KeyboardEvent('keydown', { key: '1', bubbles: true }))
+    monthSeg.dispatchEvent(new KeyboardEvent('keydown', { key: '3', bubbles: true }))
+    expect(monthSeg.getAttribute('aria-valuenow')).toBe('12')
+    el.remove()
+  })
+})
+
+describe('DateField — segment visual buffer feedback', () => {
+  it('day: shows typed digit immediately in textContent before commit', () => {
+    const { el } = makeField()
+    const daySeg = el.querySelector('[data-segment="day"]')! as HTMLElement
+    daySeg.dispatchEvent(new KeyboardEvent('keydown', { key: '1', bubbles: true }))
+    expect(daySeg.textContent).toBe('1')
+    el.remove()
+  })
+
+  it('year: shows partial digits immediately during accumulation', () => {
+    const { el } = makeField()
+    const yearSeg = el.querySelector('[data-segment="year"]')! as HTMLElement
+    for (const digit of ['2', '0', '2']) {
+      yearSeg.dispatchEvent(new KeyboardEvent('keydown', { key: digit, bubbles: true }))
+    }
+    expect(yearSeg.textContent).toBe('202')
+    el.remove()
+  })
+})
+
+describe('DateField — segment blur flush', () => {
+  it('day: single digit "0" on blur clamps to 1 (min)', () => {
+    const { el } = makeField()
+    const daySeg = el.querySelector('[data-segment="day"]')! as HTMLElement
+    daySeg.dispatchEvent(new KeyboardEvent('keydown', { key: '0', bubbles: true }))
+    daySeg.dispatchEvent(new FocusEvent('blur'))
+    expect(daySeg.getAttribute('aria-valuenow')).toBe('1')
+    el.remove()
+  })
+
+  it('day: single digit "3" on blur commits value 3', () => {
+    const { el } = makeField()
+    const daySeg = el.querySelector('[data-segment="day"]')! as HTMLElement
+    daySeg.dispatchEvent(new KeyboardEvent('keydown', { key: '3', bubbles: true }))
+    daySeg.dispatchEvent(new FocusEvent('blur'))
+    expect(daySeg.getAttribute('aria-valuenow')).toBe('3')
+    el.remove()
+  })
+
+  it('month: single digit "1" on blur commits value 1', () => {
+    const { el } = makeField()
+    const monthSeg = el.querySelector('[data-segment="month"]')! as HTMLElement
+    monthSeg.dispatchEvent(new KeyboardEvent('keydown', { key: '1', bubbles: true }))
+    monthSeg.dispatchEvent(new FocusEvent('blur'))
+    expect(monthSeg.getAttribute('aria-valuenow')).toBe('1')
+    el.remove()
+  })
+
+  it('year: fewer than 4 digits on blur resets segment to cleared state', () => {
+    const { el } = makeField()
+    const yearSeg = el.querySelector('[data-segment="year"]')! as HTMLElement
+    for (const digit of ['2', '0', '2']) {
+      yearSeg.dispatchEvent(new KeyboardEvent('keydown', { key: digit, bubbles: true }))
+    }
+    // After typing 3 digits, textContent is '202' (shown by _showBuffer)
+    expect(yearSeg.textContent).toBe('202') // verify the setup
+    yearSeg.dispatchEvent(new FocusEvent('blur'))
+    // After blur flush, _clearSegment should reset textContent to 'yyyy'
+    expect(yearSeg.textContent).toBe('yyyy')
+    el.remove()
+  })
+})
+
+describe('DateField — cross-segment day re-clamp on month change', () => {
+  it('re-clamps day to new month max when month is set to a shorter month', () => {
+    const { el, instance } = makeField()
+    instance._setSegmentValue(instance._getSegmentEl('day')!, 31)
+    instance._setSegmentValue(instance._getSegmentEl('year')!, 2026)
+    instance._setSegmentValue(instance._getSegmentEl('month')!, 2) // February 2026 = 28 days
+    expect(el.querySelector('[data-segment="day"]')!.getAttribute('aria-valuenow')).toBe('28')
+    el.remove()
+  })
+
+  it('does not alter day when it is within the new month max', () => {
+    const { el, instance } = makeField()
+    instance._setSegmentValue(instance._getSegmentEl('day')!, 15)
+    instance._setSegmentValue(instance._getSegmentEl('year')!, 2026)
+    instance._setSegmentValue(instance._getSegmentEl('month')!, 2) // February — 15 is valid
+    expect(el.querySelector('[data-segment="day"]')!.getAttribute('aria-valuenow')).toBe('15')
+    el.remove()
+  })
+
+  it('re-clamps to 29 for February in a leap year', () => {
+    const { el, instance } = makeField()
+    instance._setSegmentValue(instance._getSegmentEl('day')!, 31)
+    instance._setSegmentValue(instance._getSegmentEl('year')!, 2024) // leap year
+    instance._setSegmentValue(instance._getSegmentEl('month')!, 2)
+    expect(el.querySelector('[data-segment="day"]')!.getAttribute('aria-valuenow')).toBe('29')
+    el.remove()
+  })
+
+  it('does not set day when day segment is in placeholder state', () => {
+    const { el, instance } = makeField()
+    instance._setSegmentValue(instance._getSegmentEl('year')!, 2026)
+    instance._setSegmentValue(instance._getSegmentEl('month')!, 2)
+    const daySeg = el.querySelector('[data-segment="day"]')! as HTMLElement
+    expect(daySeg.hasAttribute('data-placeholder')).toBe(true)
+    el.remove()
+  })
+})
