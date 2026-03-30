@@ -405,6 +405,9 @@ class DateField {
         break
       case 'Backspace':
         e.preventDefault()
+        clearTimeout(this._digitTimer ?? undefined)
+        this._digitTimer = null
+        this._digitBuffer = ''
         this._clearSegment(seg)
         this._moveSegmentFocus(seg, -1)
         break
@@ -522,17 +525,18 @@ class DateField {
     }
 
     // day or month — 1 or 2 digit segments
-    const fastThreshold = type === 'day' ? 4 : 2
-
     if (len === 2) {
-      this._setSegmentValue(seg, Math.max(min, Math.min(max, num)))
-      this._digitBuffer = ''
-      this._moveSegmentFocus(seg, 1)
-    } else if (num >= fastThreshold) {
-      this._setSegmentValue(seg, Math.max(min, Math.min(max, num)))
-      this._digitBuffer = ''
-      this._moveSegmentFocus(seg, 1)
+      if (num >= min && num <= max) {
+        // In range: commit immediately and advance (responsive for valid input)
+        this._setSegmentValue(seg, num)
+        this._digitBuffer = ''
+        this._moveSegmentFocus(seg, 1)
+      }
+      // Out of range: buffer already shown by _showBuffer above.
+      // Stay on segment — _flushDigitBuffer corrects on blur.
     } else {
+      // Single digit: always wait for second digit or blur.
+      // No fast-advance — the user may intend to follow with a second digit.
       this._digitTimer = setTimeout(() => {
         this._setSegmentValue(seg, Math.max(min, Math.min(max, num)))
         this._digitBuffer = ''
