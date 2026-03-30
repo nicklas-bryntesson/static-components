@@ -826,20 +826,22 @@ describe('DateField — prop application from wrapper data attributes', () => {
 })
 
 describe('DateField — segment digit clamping', () => {
-  it('day: typing "3" then "4" clamps to 31 (max days when no month set)', () => {
+  it('day: typing "3" then "4" clamps to 31 on blur', () => {
     const { el } = makeField()
     const daySeg = el.querySelector('[data-segment="day"]')! as HTMLElement
     daySeg.dispatchEvent(new KeyboardEvent('keydown', { key: '3', bubbles: true }))
     daySeg.dispatchEvent(new KeyboardEvent('keydown', { key: '4', bubbles: true }))
+    daySeg.dispatchEvent(new FocusEvent('blur'))
     expect(daySeg.getAttribute('aria-valuenow')).toBe('31')
     el.remove()
   })
 
-  it('month: typing "1" then "3" clamps to 12', () => {
+  it('month: typing "1" then "3" clamps to 12 on blur', () => {
     const { el } = makeField()
     const monthSeg = el.querySelector('[data-segment="month"]')! as HTMLElement
     monthSeg.dispatchEvent(new KeyboardEvent('keydown', { key: '1', bubbles: true }))
     monthSeg.dispatchEvent(new KeyboardEvent('keydown', { key: '3', bubbles: true }))
+    monthSeg.dispatchEvent(new FocusEvent('blur'))
     expect(monthSeg.getAttribute('aria-valuenow')).toBe('12')
     el.remove()
   })
@@ -941,6 +943,56 @@ describe('DateField — cross-segment day re-clamp on month change', () => {
     instance._setSegmentValue(instance._getSegmentEl('year')!, 2026)
     instance._setSegmentValue(instance._getSegmentEl('month')!, 2)
     const daySeg = el.querySelector('[data-segment="day"]')! as HTMLElement
+    expect(daySeg.hasAttribute('data-placeholder')).toBe(true)
+    el.remove()
+  })
+})
+
+describe('DateField — native-like digit input (show then blur-correct)', () => {
+  it('day: single digit "4" does not fast-advance — no immediate commit', () => {
+    const { el } = makeField()
+    const daySeg = el.querySelector('[data-segment="day"]')! as HTMLElement
+    daySeg.dispatchEvent(new KeyboardEvent('keydown', { key: '4', bubbles: true }))
+    expect(daySeg.hasAttribute('data-placeholder')).toBe(true)
+    el.remove()
+  })
+
+  it('day: typing "4" then "5" shows "45" in textContent without committing', () => {
+    const { el } = makeField()
+    const daySeg = el.querySelector('[data-segment="day"]')! as HTMLElement
+    daySeg.dispatchEvent(new KeyboardEvent('keydown', { key: '4', bubbles: true }))
+    daySeg.dispatchEvent(new KeyboardEvent('keydown', { key: '5', bubbles: true }))
+    expect(daySeg.textContent).toBe('45')
+    expect(daySeg.hasAttribute('data-placeholder')).toBe(true)
+    el.remove()
+  })
+
+  it('day: typing "4" then "5" then blur clamps to 31', () => {
+    const { el } = makeField()
+    const daySeg = el.querySelector('[data-segment="day"]')! as HTMLElement
+    daySeg.dispatchEvent(new KeyboardEvent('keydown', { key: '4', bubbles: true }))
+    daySeg.dispatchEvent(new KeyboardEvent('keydown', { key: '5', bubbles: true }))
+    daySeg.dispatchEvent(new FocusEvent('blur'))
+    expect(daySeg.getAttribute('aria-valuenow')).toBe('31')
+    el.remove()
+  })
+
+  it('month: typing "1" then "3" shows "13" in textContent without committing', () => {
+    const { el } = makeField()
+    const monthSeg = el.querySelector('[data-segment="month"]')! as HTMLElement
+    monthSeg.dispatchEvent(new KeyboardEvent('keydown', { key: '1', bubbles: true }))
+    monthSeg.dispatchEvent(new KeyboardEvent('keydown', { key: '3', bubbles: true }))
+    expect(monthSeg.textContent).toBe('13')
+    expect(monthSeg.hasAttribute('data-placeholder')).toBe(true)
+    el.remove()
+  })
+
+  it('day: Backspace after typing clears buffer so blur does not commit', () => {
+    const { el } = makeField()
+    const daySeg = el.querySelector('[data-segment="day"]')! as HTMLElement
+    daySeg.dispatchEvent(new KeyboardEvent('keydown', { key: '4', bubbles: true }))
+    daySeg.dispatchEvent(new KeyboardEvent('keydown', { key: 'Backspace', bubbles: true }))
+    daySeg.dispatchEvent(new FocusEvent('blur'))
     expect(daySeg.hasAttribute('data-placeholder')).toBe(true)
     el.remove()
   })
