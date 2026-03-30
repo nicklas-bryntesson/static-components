@@ -350,7 +350,10 @@ class DateField {
     this._segmentEls.forEach(seg => {
       const keydownHandler = (e: KeyboardEvent) => this._handleSegmentKey(e, seg)
       const focusHandler = () => this._setSegmentFocused(seg)
-      const blurHandler = () => seg.removeAttribute('data-focused')
+      const blurHandler = () => {
+        seg.removeAttribute('data-focused')
+        this._flushDigitBuffer(seg)
+      }
       seg.__dateFieldHandlers = { keydown: keydownHandler, focus: focusHandler, blur: blurHandler }
       seg.addEventListener('keydown', keydownHandler)
       seg.addEventListener('focus', focusHandler)
@@ -539,6 +542,21 @@ class DateField {
     // so _getCurrentSegmentValue still returns null until _setSegmentValue commits.
     seg.textContent = buffer
     seg.setAttribute('aria-valuetext', buffer)
+  }
+
+  _flushDigitBuffer(seg: HTMLSpanElement): void {
+    if (!this._digitBuffer) return
+    clearTimeout(this._digitTimer ?? undefined)
+    this._digitTimer = null
+    const type = seg.dataset.segment as SegmentType
+    const num = Number(this._digitBuffer)
+    if (type === 'year' && this._digitBuffer.length < 4) {
+      this._clearSegment(seg)
+    } else {
+      const { min, max } = this._getSegmentLimits(type)
+      this._setSegmentValue(seg, Math.max(min, Math.min(max, num)))
+    }
+    this._digitBuffer = ''
   }
 
   _bindTrigger(): void {
