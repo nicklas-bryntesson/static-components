@@ -476,6 +476,10 @@ class DateField {
       if (daySeg) {
         const daysInMonth = getDaysInMonth(year, numericValue - 1)
         daySeg.setAttribute('aria-valuemax', String(daysInMonth))
+        const currentDay = this._getCurrentSegmentValue(daySeg)
+        if (currentDay !== null && currentDay > daysInMonth) {
+          this._setSegmentValue(daySeg, daysInMonth)
+        }
       }
     } else if (type === 'day') {
       seg.setAttribute('aria-valuetext', String(numericValue))
