@@ -500,50 +500,45 @@ class DateField {
     clearTimeout(this._digitTimer ?? undefined)
     this._digitBuffer += digit
     const num = Number(this._digitBuffer)
+    const len = this._digitBuffer.length
+    const { min, max } = this._getSegmentLimits(type)
 
-    if (type === 'day') {
-      if (num > 3) {
-        this._setSegmentValue(seg, num)
-        this._digitBuffer = ''
-        this._moveSegmentFocus(seg, 1)
-      } else if (this._digitBuffer.length === 2) {
-        const clamped = Math.min(num, this._getSegmentLimits('day').max)
-        this._setSegmentValue(seg, clamped)
-        this._digitBuffer = ''
-        this._moveSegmentFocus(seg, 1)
-      } else {
-        this._digitTimer = setTimeout(() => {
-          this._setSegmentValue(seg, num)
-          this._digitBuffer = ''
-          this._moveSegmentFocus(seg, 1)
-        }, 1000)
-      }
-    } else if (type === 'month') {
-      if (num > 1) {
-        this._setSegmentValue(seg, num)
-        this._digitBuffer = ''
-        this._moveSegmentFocus(seg, 1)
-      } else if (this._digitBuffer.length === 2) {
-        const clamped = Math.max(1, Math.min(num, 12))
-        this._setSegmentValue(seg, clamped)
-        this._digitBuffer = ''
-        this._moveSegmentFocus(seg, 1)
-      } else {
-        this._digitTimer = setTimeout(() => {
-          this._setSegmentValue(seg, Math.max(1, num))
-          this._digitBuffer = ''
-          this._moveSegmentFocus(seg, 1)
-        }, 1000)
-      }
-    } else if (type === 'year') {
-      if (this._digitBuffer.length === 4) {
-        const limits = this._getSegmentLimits('year')
-        const clamped = Math.max(limits.min, Math.min(limits.max, num))
-        this._setSegmentValue(seg, clamped)
+    this._showBuffer(seg, this._digitBuffer)
+
+    if (type === 'year') {
+      if (len === 4) {
+        this._setSegmentValue(seg, Math.max(min, Math.min(max, num)))
         this._digitBuffer = ''
         this._moveSegmentFocus(seg, 1)
       }
+      return
     }
+
+    // day or month — 1 or 2 digit segments
+    const fastThreshold = type === 'day' ? 4 : 2
+
+    if (len === 2) {
+      this._setSegmentValue(seg, Math.max(min, Math.min(max, num)))
+      this._digitBuffer = ''
+      this._moveSegmentFocus(seg, 1)
+    } else if (num >= fastThreshold) {
+      this._setSegmentValue(seg, Math.max(min, Math.min(max, num)))
+      this._digitBuffer = ''
+      this._moveSegmentFocus(seg, 1)
+    } else {
+      this._digitTimer = setTimeout(() => {
+        this._setSegmentValue(seg, Math.max(min, Math.min(max, num)))
+        this._digitBuffer = ''
+        this._moveSegmentFocus(seg, 1)
+      }, 1000)
+    }
+  }
+
+  _showBuffer(seg: HTMLSpanElement, buffer: string): void {
+    // Update visual display only — do not touch data-placeholder or aria-valuenow
+    // so _getCurrentSegmentValue still returns null until _setSegmentValue commits.
+    seg.textContent = buffer
+    seg.setAttribute('aria-valuetext', buffer)
   }
 
   _bindTrigger(): void {
