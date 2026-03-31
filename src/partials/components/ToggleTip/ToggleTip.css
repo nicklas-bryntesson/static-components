@@ -1,0 +1,287 @@
+  :root {
+    /* Connectors to the inner variables of toggle-tip */
+
+    /* Appearance */
+    --toggletip--buttonWidth: 1.5rem;
+    --toggletip--buttonColor: black;
+    --toggletip--contentWidth: 20rem;
+    --toggletip--surfaceColor: white;
+    --toggletip--textColor--primary: black;
+    --toggletip--textColor--secondary: darkgrey;
+    --toggletip--borderColor: lightgrey;
+
+    /* Padding, margin, etc to be added  */
+
+    /* Current site layout */
+    --toggleTip--siteContent--maxWidth: 70rem;
+    --toggleTip--siteContent--padding: var(--content--paddingInline);
+  }
+
+  toggle-tip {
+    /* Connector variable, fallback value */
+    --_tt--buttonWidth: var(--toggletip--buttonWidth, 1.5rem);
+    --_tt--buttonWidth--half: calc(var(--_tt--buttonWidth) / 2);
+    --_tt--buttonColor: var(--toggletip--buttonColor, black);
+
+    --_tt--toggletipContent--maxWidth: var(--toggletip--contentWidth, 20rem);
+
+    --_tt--surfaceColor: var(--toggletip--surfaceColor, white);
+    --_tt--textColor--primary: var(--toggletip--textColor--primary, black);
+    --_tt--textColor--secondary: var(
+      --toggletip--textColor--secondary,
+      darkgrey
+    );
+    --_tt--borderColor: var(--toggletip--borderColor, lightgrey);
+
+    /* Dropshadow */
+    --_tt--shadow-alpha: 20%;
+    --_tt--shadow: drop-shadow(
+        0 3px 3px hsl(0 0% 0% / var(--_tt--shadow-alpha))
+      )
+      drop-shadow(0 12px 12px hsl(0 0% 0% / var(--_tt--shadow-alpha)));
+
+    /* layout */
+    --_tt--siteContent--maxWidth: var(
+      --toggleTip--siteContent--maxWidth,
+      100rem
+    );
+    --_tt--siteContent--padding: var(
+      --toggleTip--siteContent--padding,
+      0.75rem
+    );
+
+    /* 
+  * Calculations: slider
+  */
+
+    --_tt--sliderContainer--width: calc(
+      100vw - var(--_tt--allowedContentOverflow)
+    );
+
+    --_tt--sliderContainer--maxWidth: calc(
+      var(--_tt--siteContent--maxWidth) + var(--_tt--toggletipContent--maxWidth)
+    );
+
+    --_tt--sliderContainer--paddingInline: calc(
+      var(--_tt--toggletipContent--maxWidth) / 2 -
+        var(--_tt--allowedContentOverflow)
+    );
+
+    --_tt--allowedContentOverflow: calc(
+      var(--toggleTip--siteContent--padding) / 2
+    );
+
+    /* 
+  * Calculations: arrow
+  */
+    --_tt--arrowSize: calc(var(--_tt--buttonWidth) / 2);
+
+    --toggleButtonHalf: calc(var(--_tt--buttonWidth) / 2);
+    --toggleContentHalf: calc(var(--_tt--toggletipContent--maxWidth) / 2);
+  }
+
+  toggle-tip {
+    position: relative;
+    display: inline;
+    width: var(--_tt--buttonWidth);
+    height: var(--_tt--buttonWidth);
+    overflow: hidden;
+    isolation: isolate;
+
+    & > * {
+      opacity: 0;
+    }
+
+    & button {
+      position: absolute;
+      inset-inline: 0;
+      inset-block-end: -0.3rem; /* lower the baseline */
+      border: 0;
+      padding: 0;
+      width: var(--_tt--buttonWidth); /* make the button a square */
+      height: var(--_tt--buttonWidth);
+      border-radius: 0;
+      color: var(--_tt--buttonColor);
+      background: none;
+      cursor: pointer;
+      z-index: -1;
+
+      &::after {
+        --_clickArea: 2rem;
+        --_offset: calc((var(--_tt--buttonWidth) - var(--_clickArea)) / 2);
+
+        position: absolute;
+        content: "";
+        width: var(--_clickArea);
+        height: var(--_clickArea);
+        inset: var(--_offset);
+        z-index: -1;
+      }
+
+      & .toggleTipIcon {
+        stroke: currentColor;
+        stroke-linejoin: round;
+        stroke-miterlimit: 10;
+        stroke-width: 2;
+        width: var(--_tt--buttonWidth);
+        height: var(--_tt--buttonWidth);
+      }
+    }
+
+    & .slideContainer {
+      /* 
+    * The slider container is the parent of the inner slider and the toggleTipContent
+    * 
+    */
+      --insetInlineStart: 50%;
+      --translateX--initial: translateX(calc(var(--insetInlineStart) * -1));
+      --translateX--calculated: translateX(var(--insetInlineStartOffset, 0));
+
+      position: absolute;
+      inset-block-end: 0.75rem;
+      inset-inline-start: var(--insetInlineStart);
+      transform: var(--translateX--initial) var(--translateX--calculated);
+      width: min(
+        var(--_tt--sliderContainer--width),
+        var(--_tt--sliderContainer--maxWidth)
+      );
+      max-width: var(--_tt--sliderContainer--maxWidth);
+      padding-inline: min(20rem, var(--_tt--sliderContainer--paddingInline));
+      margin-inline: auto;
+      height: 0;
+      pointer-events: none;
+      z-index: 999999;
+    }
+
+    & .innerSlider {
+      position: relative;
+      height: 2px;
+      width: 100%;
+      display: flex;
+    }
+
+    & .toggleTipContent {
+      /* position */
+      position: absolute;
+      transform: translateX(-50%);
+      inset-inline-start: 0;
+      /* width/height */
+      inline-size: 20rem;
+      min-inline-size: 20ch;
+      max-inline-size: var(--_tt--toggletipContent--maxWidth);
+      block-size: max-content;
+      min-block-size: 3rem;
+      z-index: 1;
+      /* Javascript controlled */
+      margin-inline-start: var(--_tt--marginInlineStart);
+      display: flex;
+      flex-direction: column;
+      align-items: flex-start;
+      padding-inline: 1.5rem;
+      padding-block: 1.5rem 0;
+      border-radius: 1rem;
+      opacity: 1;
+      will-change: filter;
+      filter: var(--_tt--shadow);
+      background-color: var(--_tt--surfaceColor);
+      color: var(--_tt--textColor--primary);
+
+      & .title {
+        display: block;
+        color: var(--_tt--textColor--primary);
+        margin-block-end: 1rem;
+        padding-block-end: 1rem;
+        border-block-end: 0.125rem solid var(--_tt--borderColor);
+      }
+    }
+
+    & .arrowSlider {
+      --_arrowPosition: 100%;
+
+      position: absolute;
+      inset-inline: 0;
+      width: calc(
+        100% -
+          (
+            var(--_tt--buttonWidth) + var(--_tt--allowedContentOverflow) -
+              var(--_tt--arrowSize)
+          )
+      );
+      height: 0;
+      margin-inline: auto;
+      pointer-events: none;
+      z-index: -1;
+
+      & .arrow {
+        position: absolute;
+        transform-origin: center center;
+        transform: translate(-50%, -50%) rotate(45deg);
+        margin-inline-start: var(--_tt--marginInlineStart);
+        width: var(--_tt--arrowSize);
+        height: var(--_tt--arrowSize);
+        z-index: -1;
+        background-color: var(--_tt--surfaceColor);
+      }
+    }
+  }
+
+  toggle-tip[initialized="true"] {
+    overflow: visible;
+
+    & > * {
+      opacity: 1;
+    }
+
+    & button {
+      display: inline-block;
+    }
+
+    & .toggleTipContent[aria-hidden="true"] {
+      display: none;
+      opacity: 0;
+      transition-property: opacity;
+      transition-duration: 1s;
+    }
+
+    & .toggleTipContent[aria-hidden="false"] {
+      display: block;
+      opacity: 1;
+
+      @starting-style {
+        transform: translateY(-0.5rem);
+        opacity: 0;
+      }
+    }
+
+    &[direction="top"] {
+      & .toggleTipContent {
+        inset-block-start: auto;
+        inset-block-end: 100%;
+        margin-block-end: 2rem;
+      }
+
+      & .arrowSlider {
+        & .arrow {
+          inset-block-start: 0;
+          border-end-end-radius: 0.3rem;
+        }
+      }
+    }
+
+    &[direction="bottom"] {
+      & .toggleTipContent {
+        inset-block-start: 100%;
+        inset-block-end: auto;
+        margin-block-start: 2rem;
+      }
+
+      & .arrowSlider {
+        inset-block-start: 0;
+
+        & .arrow {
+          inset-block-end: -0.7rem;
+          border-start-start-radius: 0.3rem;
+        }
+      }
+    }
+  }
